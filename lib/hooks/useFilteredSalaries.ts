@@ -69,13 +69,16 @@ export function useFilteredSalaries(
 
     // Apply Sorting
     filtered.sort((a, b) => {
-      let aVal = a[sort.field];
-      let bVal = b[sort.field];
+      let aVal = a[sort.field] as number | string;
+      let bVal = b[sort.field] as number | string;
 
       if (sort.field === 'reportedAt') {
         aVal = new Date(aVal as string).getTime();
         bVal = new Date(bVal as string).getTime();
       }
+
+      if (aVal === undefined) aVal = 0;
+      if (bVal === undefined) bVal = 0;
 
       if (aVal < bVal) return sort.direction === 'asc' ? -1 : 1;
       if (aVal > bVal) return sort.direction === 'asc' ? 1 : -1;
