@@ -115,14 +115,16 @@ function FieldLabel({
   children,
   required,
   hint,
+  htmlFor,
 }: {
   children: React.ReactNode;
   required?: boolean;
   hint?: string;
+  htmlFor?: string;
 }) {
   const [showHint, setShowHint] = useState(false);
   return (
-    <label className="flex items-center gap-1.5 text-sm font-medium mb-1.5">
+    <label htmlFor={htmlFor} className="flex items-center gap-1.5 text-sm font-medium mb-1.5">
       {children}
       {required && <span className="text-destructive">*</span>}
       {hint && (
@@ -345,7 +347,7 @@ function Step1({
     <div className="space-y-6">
       {/* Company */}
       <div>
-        <FieldLabel required>Company Name</FieldLabel>
+        <FieldLabel required htmlFor="company-name">Company Name</FieldLabel>
         <Autocomplete
           id="company-name"
           value={data.companyName}
@@ -358,7 +360,7 @@ function Step1({
 
       {/* Job title */}
       <div>
-        <FieldLabel required>Job Title</FieldLabel>
+        <FieldLabel required htmlFor="job-title">Job Title</FieldLabel>
         <Input
           id="job-title"
           value={data.jobTitle}
@@ -410,7 +412,7 @@ function Step1({
       {/* Experience */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <FieldLabel required hint="Total professional experience across all employers">
+          <FieldLabel required htmlFor="total-yoe" hint="Total professional experience across all employers">
             Total YoE
           </FieldLabel>
           <Input
@@ -428,7 +430,7 @@ function Step1({
           <FieldError message={errors.totalYoe} />
         </div>
         <div>
-          <FieldLabel hint="How long you've been at this specific company">
+          <FieldLabel htmlFor="company-yoe" hint="How long you've been at this specific company">
             At this company
           </FieldLabel>
           <Input
@@ -490,7 +492,7 @@ function Step2({
       {/* Salary fields */}
       <div className="space-y-4">
         <div>
-          <FieldLabel required>Base Salary (annual)</FieldLabel>
+          <FieldLabel required htmlFor="base-salary">Base Salary (annual)</FieldLabel>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">
               {symbol}
@@ -512,6 +514,7 @@ function Step2({
 
         <div>
           <FieldLabel
+            htmlFor="stock-per-year"
             hint="Enter the annual vesting value of your RSUs — not the total 4-year grant. E.g., if you got ₹48L over 4 years, enter ₹12L."
           >
             Annual Stock / RSU
@@ -535,7 +538,7 @@ function Step2({
         </div>
 
         <div>
-          <FieldLabel hint="Target or typical bonus, not guaranteed. Use the amount you expect to receive in a normal year.">
+          <FieldLabel htmlFor="annual-bonus" hint="Target or typical bonus, not guaranteed. Use the amount you expect to receive in a normal year.">
             Annual Bonus
           </FieldLabel>
           <div className="relative">
@@ -568,7 +571,7 @@ function Step2({
       {/* Location */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <FieldLabel required>City</FieldLabel>
+          <FieldLabel required htmlFor="city">City</FieldLabel>
           <Autocomplete
             id="city"
             value={data.city}
@@ -579,7 +582,7 @@ function Step2({
           <FieldError message={errors.city} />
         </div>
         <div>
-          <FieldLabel>Country</FieldLabel>
+          <FieldLabel htmlFor="country">Country</FieldLabel>
           <Autocomplete
             id="country"
             value={data.country}
@@ -592,7 +595,7 @@ function Step2({
 
       {/* Date */}
       <div>
-        <FieldLabel required hint="When did this compensation package become effective?">
+        <FieldLabel required htmlFor="effective-month" hint="When did this compensation package become effective?">
           Effective Date
         </FieldLabel>
         <div className="grid grid-cols-2 gap-3">
@@ -625,6 +628,7 @@ function Step2({
               }
               placeholder={String(new Date().getFullYear())}
               className="h-10 text-sm"
+              aria-label="Effective Year"
             />
             <FieldError message={errors.effectiveYear} />
           </div>
@@ -666,7 +670,7 @@ function Step3({
       {/* Optional verification */}
       <div className="rounded-xl border border-border bg-card p-4 space-y-4">
         <div>
-          <h4 className="text-sm font-semibold mb-1">LinkedIn URL (optional)</h4>
+          <FieldLabel htmlFor="linkedin-url">LinkedIn URL (optional)</FieldLabel>
           <p className="text-xs text-muted-foreground mb-2">
             Helps us verify your role. Never displayed publicly.
           </p>
@@ -681,7 +685,7 @@ function Step3({
         </div>
 
         <div>
-          <h4 className="text-sm font-semibold mb-1">Upload Offer Letter (optional)</h4>
+          <FieldLabel htmlFor="offer-upload">Upload Offer Letter (optional)</FieldLabel>
           <p className="text-xs text-muted-foreground mb-2">
             PDF or image. Used only for verification — never stored publicly.
           </p>

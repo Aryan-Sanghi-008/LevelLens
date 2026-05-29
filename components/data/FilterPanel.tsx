@@ -168,10 +168,11 @@ export function FilterPanel() {
           <AccordionContent className="pt-1 pb-4 space-y-3">
             <input
               type="text"
+              aria-label="Search roles"
               placeholder="Search roles..."
               value={roleSearch}
               onChange={(e) => setRoleSearch(e.target.value)}
-              className="w-full h-8 px-3 rounded-lg border border-border/80 bg-background text-xs placeholder:text-muted-foreground/75 focus:outline-none focus:ring-1 focus:ring-brand-primary/50 focus:border-brand-primary/50 transition-all"
+              className="w-full h-8 px-3 rounded-lg border border-border/80 bg-background text-xs placeholder:text-muted-foreground/75 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:border-brand-primary transition-all"
             />
             <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
               {displayedRoles.length === 0 ? (
@@ -226,10 +227,11 @@ export function FilterPanel() {
           <AccordionContent className="pt-1 pb-4 space-y-3">
             <input
               type="text"
+              aria-label="Search companies"
               placeholder="Search companies..."
               value={companySearch}
               onChange={(e) => setCompanySearch(e.target.value)}
-              className="w-full h-8 px-3 rounded-lg border border-border/80 bg-background text-xs placeholder:text-muted-foreground/75 focus:outline-none focus:ring-1 focus:ring-brand-primary/50 focus:border-brand-primary/50 transition-all"
+              className="w-full h-8 px-3 rounded-lg border border-border/80 bg-background text-xs placeholder:text-muted-foreground/75 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:border-brand-primary transition-all"
             />
             <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
               {displayedCompanies.length === 0 ? (

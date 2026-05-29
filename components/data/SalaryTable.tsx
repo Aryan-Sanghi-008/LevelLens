@@ -199,9 +199,13 @@ export function SalaryTable({
     [handleAddToComparison]
   );
 
-  const handleDetailClick = React.useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
+  const handleDetailClick = React.useCallback(
+    (e: React.MouseEvent, record: CompensationRecord) => {
+      e.stopPropagation();
+      setSelectedRecord(record);
+    },
+    []
+  );
 
   // ── Column definitions (memoised) ──────────────────────────────────────────
 
@@ -221,7 +225,7 @@ export function SalaryTable({
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => handleRowSelect(row, value)}
-            aria-label="Select row"
+            aria-label={`Select row for ${row.original.company.name}`}
             className="translate-y-[2px]"
           />
         ),
@@ -449,6 +453,7 @@ export function SalaryTable({
               variant="ghost"
               size="icon"
               className="h-7 w-7 text-muted-foreground hover:text-primary"
+              aria-label={`Add ${row.original.company.name} to comparison`}
               title="Add to compare"
               onClick={(e) => handleCompareClick(e, row.original)}
             >
@@ -458,8 +463,9 @@ export function SalaryTable({
               variant="ghost"
               size="icon"
               className="h-7 w-7 text-muted-foreground"
+              aria-label={`Open detailed record for ${row.original.company.name}`}
               title="Open detail"
-              onClick={handleDetailClick}
+              onClick={(e) => handleDetailClick(e, row.original)}
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </Button>
@@ -517,6 +523,70 @@ export function SalaryTable({
 
   const virtualItems = virtualizer.getVirtualItems();
   const totalHeight = virtualizer.getTotalSize();
+
+  const [activeCell, setActiveCell] = React.useState<{ rowIndex: number; colIndex: number } | null>(null);
+
+  const handleKeyDown = React.useCallback(
+    (e: React.KeyboardEvent<HTMLElement>, rowIndex: number, colIndex: number) => {
+      let nextRowIndex = rowIndex;
+      let nextColIndex = colIndex;
+      let handled = false;
+
+      switch (e.key) {
+        case "ArrowUp":
+          nextRowIndex = Math.max(0, rowIndex - 1);
+          handled = true;
+          break;
+        case "ArrowDown":
+          nextRowIndex = Math.min(rows.length - 1, rowIndex + 1);
+          handled = true;
+          break;
+        case "ArrowLeft":
+          nextColIndex = Math.max(0, colIndex - 1);
+          handled = true;
+          break;
+        case "ArrowRight":
+          nextColIndex = Math.min(12 - 1, colIndex + 1); // 12 columns total
+          handled = true;
+          break;
+        case " ":
+          e.preventDefault();
+          rows[rowIndex]?.toggleSelected();
+          handled = true;
+          break;
+        case "Enter":
+          e.preventDefault();
+          setSelectedRecord(rows[rowIndex]?.original || null);
+          handled = true;
+          break;
+        default:
+          break;
+      }
+
+      if (handled) {
+        e.stopPropagation();
+
+        if (nextRowIndex !== rowIndex || nextColIndex !== colIndex) {
+          setActiveCell({ rowIndex: nextRowIndex, colIndex: nextColIndex });
+
+          const isRowVisible = virtualizer.getVirtualItems().some((item) => item.index === nextRowIndex);
+          if (!isRowVisible) {
+            virtualizer.scrollToIndex(nextRowIndex, { align: "auto" });
+          }
+
+          setTimeout(() => {
+            const target = scrollContainerRef.current?.querySelector(
+              `[data-row-idx="${nextRowIndex}"][data-col-idx="${nextColIndex}"]`
+            ) as HTMLElement;
+            if (target) {
+              target.focus();
+            }
+          }, 60);
+        }
+      }
+    },
+    [rows, virtualizer]
+  );
 
   // Track scroll position for the indicator bar
   const handleScroll = React.useCallback(
@@ -651,6 +721,16 @@ export function SalaryTable({
                     return (
                       <th
                         key={header.id}
+                        role="columnheader"
+                        aria-sort={
+                          header.column.getCanSort()
+                            ? header.column.getIsSorted()
+                              ? header.column.getIsSorted() === "asc"
+                                ? "ascending"
+                                : "descending"
+                              : "none"
+                            : undefined
+                        }
                         className={cn(
                           "h-10 px-3 text-left text-xs font-semibold text-muted-foreground whitespace-nowrap",
                           isSticky &&
@@ -725,6 +805,10 @@ export function SalaryTable({
             <div style={{ height: totalHeight, width: "100%", position: "relative" }}>
               {/* Virtual rows */}
               <table
+                role="grid"
+                aria-colcount={columns.length}
+                aria-rowcount={rows.length + 1}
+                aria-busy={isPending}
                 className="w-full min-w-[860px] border-collapse absolute top-0 left-0"
                 style={{ tableLayout: "fixed" }}
               >
@@ -745,6 +829,8 @@ export function SalaryTable({
                     return (
                       <tr
                         key={row.id}
+                        role="row"
+                        aria-selected={row.getIsSelected()}
                         data-index={virtualRow.index}
                         data-state={row.getIsSelected() ? "selected" : undefined}
                         style={{
@@ -764,11 +850,20 @@ export function SalaryTable({
                       >
                         {row.getVisibleCells().map((cell, idx) => {
                           const isSticky = idx === 1;
+                          const isCellActive = activeCell
+                            ? activeCell.rowIndex === virtualRow.index && activeCell.colIndex === idx
+                            : virtualRow.index === 0 && idx === 1;
                           return (
                             <td
                               key={cell.id}
+                              role="gridcell"
+                              data-row-idx={virtualRow.index}
+                              data-col-idx={idx}
+                              tabIndex={isCellActive ? 0 : -1}
+                              onKeyDown={(e) => handleKeyDown(e, virtualRow.index, idx)}
+                              onFocus={() => setActiveCell({ rowIndex: virtualRow.index, colIndex: idx })}
                               className={cn(
-                                "px-3 overflow-hidden",
+                                "px-3 overflow-hidden focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1 focus:ring-offset-background",
                                 isSticky &&
                                   "sticky left-0 z-10 bg-card group-hover:bg-muted/40 transition-colors shadow-[1px_0_0_0_hsl(var(--border))]",
                                 row.getIsSelected() && isSticky && "bg-primary/5"

@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useComparisonStore } from "@/lib/hooks/useComparisonStore";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
@@ -70,12 +71,34 @@ const METRICS = [
 
 export function CompareView() {
   const { slots, removeFromComparison, clearComparison } = useComparisonStore();
+  const [liveAnnouncement, setLiveAnnouncement] = useState("");
+  const prevSlotsRef = useRef(slots);
 
   const filled = slots
     .map(resolveSlotStats)
     .filter((s): s is SlotStats => s !== null);
 
   const emptySlots = 3 - slots.length;
+
+  useEffect(() => {
+    if (slots.length > prevSlotsRef.current.length) {
+      // Slot added
+      const addedSlotIndex = slots.length - 1;
+      const addedSlot = slots[addedSlotIndex];
+      if (addedSlot) {
+        const companyName = MOCK_COMPANIES.find((c) => c.slug === addedSlot.companyId)?.name || "Company";
+        setLiveAnnouncement(`Added ${companyName} ${addedSlot.role} (${addedSlot.level}) to comparison. ${slots.length} of 3 slots filled.`);
+      }
+    } else if (slots.length < prevSlotsRef.current.length) {
+      // Slot removed or cleared
+      if (slots.length === 0) {
+        setLiveAnnouncement("Cleared all comparison slots. 0 of 3 slots filled.");
+      } else {
+        setLiveAnnouncement(`Removed slot. ${slots.length} of 3 slots filled.`);
+      }
+    }
+    prevSlotsRef.current = slots;
+  }, [slots]);
 
   return (
     <PageShell
@@ -89,6 +112,11 @@ export function CompareView() {
         ) : undefined
       }
     >
+      {/* Screen Reader Live Region for WCAG AA compliance */}
+      <div className="sr-only" aria-live="polite">
+        {liveAnnouncement}
+      </div>
+
       {slots.length === 0 ? (
         <EmptyState
           title="No comparisons yet"
@@ -136,7 +164,7 @@ export function CompareView() {
                     variant="ghost"
                     size="icon-sm"
                     onClick={() => removeFromComparison(i)}
-                    aria-label="Remove"
+                    aria-label={`Remove ${s.companyName} ${s.role} (${s.level}) from comparison`}
                   >
                     <X className="size-4" />
                   </Button>
@@ -197,6 +225,7 @@ export function CompareView() {
                           size="icon-sm"
                           className="ml-auto shrink-0"
                           onClick={() => removeFromComparison(i)}
+                          aria-label={`Remove ${s.companyName} ${s.role} (${s.level}) from comparison`}
                         >
                           <X className="size-3.5" />
                         </Button>
