@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -7,6 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { BottomNav } from "@/components/layout/BottomNav";
 import { CommandSearch } from "@/components/shared/CommandSearch";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
@@ -37,13 +39,20 @@ export default function RootLayout({
           >
             <TooltipProvider>
               <div className="relative flex min-h-screen flex-col">
-                <Header />
+                <Suspense
+                  fallback={
+                    <header className="sticky top-0 z-50 h-14 w-full shrink-0 border-b border-border bg-background" />
+                  }
+                >
+                  <Header />
+                </Suspense>
                 <div className="flex flex-1 items-start w-full">
                   <Sidebar />
-                  <main className="flex-1 overflow-y-auto">
+                  <main className="flex-1 overflow-y-auto pb-14 md:pb-0">
                     {children}
                   </main>
                 </div>
+                <BottomNav />
               </div>
               <CommandSearch />
               <Toaster richColors closeButton />

@@ -10,6 +10,7 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   SortingState,
+  OnChangeFn,
   useReactTable,
   Row,
 } from "@tanstack/react-table";
@@ -51,6 +52,7 @@ import {
 } from "@/lib/formatters";
 import { useComparisonStore } from "@/lib/hooks/useComparisonStore";
 import { SalaryDetailDrawer } from "@/components/data/SalaryDetailDrawer";
+import { SalaryTableMobile } from "@/components/data/SalaryTableMobile";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -94,6 +96,8 @@ interface SalaryTableProps {
   data: CompensationRecord[];
   isLoading?: boolean;
   isPending?: boolean;
+  sorting?: SortingState;
+  onSortingChange?: OnChangeFn<SortingState>;
 }
 
 // ─── Scroll position indicator ────────────────────────────────────────────────
@@ -133,8 +137,17 @@ export { SalaryTableSkeleton };
 
 // ─── SalaryTable ─────────────────────────────────────────────────────────────
 
-export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+export function SalaryTable({
+  data,
+  isLoading,
+  isPending,
+  sorting: controlledSorting,
+  onSortingChange,
+}: SalaryTableProps) {
+  const [internalSorting, setInternalSorting] = React.useState<SortingState>([]);
+  const sorting = controlledSorting ?? internalSorting;
+  const setSorting: OnChangeFn<SortingState> =
+    onSortingChange ?? setInternalSorting;
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({});
   const [selectedRecord, setSelectedRecord] = React.useState<CompensationRecord | null>(null);
@@ -550,10 +563,37 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
+  const sortedData = React.useMemo(() => {
+    if (sorting.length === 0) return data;
+    const { id, desc } = sorting[0];
+    const field = id as keyof CompensationRecord;
+    return [...data].sort((a, b) => {
+      let aVal: number | string = a[field] as number | string;
+      let bVal: number | string = b[field] as number | string;
+      if (id === "reportedAt") {
+        aVal = new Date(aVal as string).getTime();
+        bVal = new Date(bVal as string).getTime();
+      }
+      if (aVal < bVal) return desc ? 1 : -1;
+      if (aVal > bVal) return desc ? -1 : 1;
+      return 0;
+    });
+  }, [data, sorting]);
+
   return (
     <div className="w-full space-y-3">
-      {/* Toolbar */}
-      <div className="flex items-center justify-end gap-2">
+      {/* Mobile card list */}
+      <div className="md:hidden rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <SalaryTableMobile
+          data={sortedData}
+          isLoading={isLoading}
+          isPending={isPending}
+          onRecordClick={(record) => setSelectedRecord(record)}
+        />
+      </div>
+
+      {/* Desktop toolbar */}
+      <div className="hidden md:flex items-center justify-end gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger
             className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3"
@@ -579,8 +619,8 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
         </DropdownMenu>
       </div>
 
-      {/* Table Container */}
-      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden relative">
+      {/* Desktop table container */}
+      <div className="hidden md:block rounded-xl border border-border bg-card shadow-sm overflow-hidden relative">
         {isPending && (
           <div
             className="absolute top-3 right-3 z-40 pointer-events-none"

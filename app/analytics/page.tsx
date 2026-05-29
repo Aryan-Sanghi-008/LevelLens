@@ -235,7 +235,7 @@ export default function AnalyticsPage() {
       <div className="flex flex-col gap-10 mt-2">
 
         {/* ── Summary Stats Bar ── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: "Total Data Points", value: summaryStats.dataPoints.toLocaleString(), sub: "verified submissions" },
             { label: "Companies Tracked", value: summaryStats.companies, sub: "across sectors" },
@@ -259,7 +259,9 @@ export default function AnalyticsPage() {
               Greyed cells have fewer than 3 data points.
             </p>
           </div>
-          <CompensationHeatmap data={MOCK_SALARIES} />
+          <div className="overflow-x-auto min-w-0 -mx-1 px-1">
+            <CompensationHeatmap data={MOCK_SALARIES} />
+          </div>
         </section>
 
         {/* ── Middle Charts ── */}
@@ -272,7 +274,7 @@ export default function AnalyticsPage() {
                 <h3 className="font-semibold text-base">Top Paying Companies</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">Median total comp by level</p>
               </div>
-              <div className="flex bg-muted/60 p-1 rounded-lg gap-0.5">
+              <div className="flex bg-muted/60 p-1 rounded-lg gap-0.5 overflow-x-auto max-w-full shrink-0">
                 {[NormalizedLevel.MID, NormalizedLevel.SENIOR, NormalizedLevel.STAFF, NormalizedLevel.PRINCIPAL].map((l) => (
                   <Button
                     key={l}
@@ -296,8 +298,8 @@ export default function AnalyticsPage() {
                 Not enough data for this level.
               </div>
             ) : (
-              <div className="flex-1 min-h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
+              <div className="flex-1 min-h-[280px] min-w-0 overflow-x-auto">
+                <ResponsiveContainer width="100%" height="100%" minWidth={280}>
                   <BarChart
                     data={topPayingData}
                     layout="vertical"

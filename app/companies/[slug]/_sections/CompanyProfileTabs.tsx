@@ -5,6 +5,10 @@ import { NormalizedLevel } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { LevelDistributionBar } from "@/components/charts/LevelDistributionBar";
+import {
+  CompanyCompensationCards,
+  type LevelCompRow,
+} from "@/components/data/CompanyCompensationCards";
 import { cn } from "@/lib/utils";
 import { notFound } from "next/navigation";
 
@@ -21,6 +25,14 @@ export async function CompanyProfileTabs({ slug }: { slug: string }) {
       level: level as NormalizedLevel,
       count,
     }));
+
+  const compRows: LevelCompRow[] = Object.values(NormalizedLevel)
+    .map((level) => {
+      const comp = levelCompensation[level];
+      if (!comp || comp.count === 0) return null;
+      return { level, ...comp };
+    })
+    .filter((r): r is LevelCompRow => r !== null);
 
   const rolesMap = new Map<string, number[]>();
   MOCK_SALARIES.filter((r) => r.company.slug === slug).forEach((r) => {
@@ -41,18 +53,27 @@ export async function CompanyProfileTabs({ slug }: { slug: string }) {
 
   return (
     <Tabs defaultValue="compensation" className="w-full mt-4">
-      <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-6">
-        <TabsTrigger value="compensation">Compensation</TabsTrigger>
-        <TabsTrigger value="levels">Levels</TabsTrigger>
-        <TabsTrigger value="roles">Roles</TabsTrigger>
-        <TabsTrigger value="locations">Locations</TabsTrigger>
+      <TabsList className="flex w-full max-w-none h-auto overflow-x-auto justify-start gap-1 mb-6 p-1 md:grid md:max-w-2xl md:grid-cols-4 md:overflow-visible">
+        <TabsTrigger value="compensation" className="shrink-0">
+          Compensation
+        </TabsTrigger>
+        <TabsTrigger value="levels" className="shrink-0">
+          Levels
+        </TabsTrigger>
+        <TabsTrigger value="roles" className="shrink-0">
+          Roles
+        </TabsTrigger>
+        <TabsTrigger value="locations" className="shrink-0">
+          Locations
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent
         value="compensation"
         className="bg-card border border-border rounded-xl shadow-sm overflow-hidden"
       >
-        <div className="overflow-x-auto">
+        <CompanyCompensationCards rows={compRows} globalMedians={globalMedians} />
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-semibold">
               <tr>
@@ -118,7 +139,7 @@ export async function CompanyProfileTabs({ slug }: { slug: string }) {
 
       <TabsContent
         value="levels"
-        className="bg-card border border-border rounded-xl p-6 shadow-sm"
+        className="bg-card border border-border rounded-xl p-4 md:p-6 shadow-sm overflow-x-auto"
       >
         <h2 className="text-xl font-bold mb-6">Level Distribution</h2>
         <LevelDistributionBar data={chartData} />
@@ -128,7 +149,23 @@ export async function CompanyProfileTabs({ slug }: { slug: string }) {
         value="roles"
         className="bg-card border border-border rounded-xl shadow-sm overflow-hidden"
       >
-        <table className="w-full text-sm text-left">
+        <div className="md:hidden divide-y divide-border">
+          {roleData.map((r) => (
+            <div
+              key={r.role}
+              className="flex items-center justify-between px-4 py-3"
+            >
+              <div>
+                <p className="font-medium text-sm">{r.role}</p>
+                <p className="text-xs text-muted-foreground">{r.count} data points</p>
+              </div>
+              <p className="font-bold text-sm">
+                {formatCurrency(r.median, "INR", true)}
+              </p>
+            </div>
+          ))}
+        </div>
+        <table className="hidden md:table w-full text-sm text-left">
           <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-semibold">
             <tr>
               <th className="px-6 py-4">Role</th>
@@ -154,7 +191,18 @@ export async function CompanyProfileTabs({ slug }: { slug: string }) {
         value="locations"
         className="bg-card border border-border rounded-xl shadow-sm overflow-hidden"
       >
-        <table className="w-full text-sm text-left">
+        <div className="md:hidden divide-y divide-border">
+          {locationData.map((l) => (
+            <div
+              key={l.city}
+              className="flex items-center justify-between px-4 py-3"
+            >
+              <p className="font-medium text-sm">{l.city}</p>
+              <p className="text-sm text-muted-foreground">{l.count} points</p>
+            </div>
+          ))}
+        </div>
+        <table className="hidden md:table w-full text-sm text-left">
           <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-semibold">
             <tr>
               <th className="px-6 py-4">Location</th>

@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useState, Suspense } from "react";
+import type { SortingState } from "@tanstack/react-table";
 import { PageShell } from "@/components/layout/PageShell";
 import { SalaryTable } from "@/components/data/SalaryTable";
+import { SalaryTableMobileBar } from "@/components/data/SalaryTableMobileBar";
 import { FilterPanel } from "@/components/data/FilterPanel";
+import { FilterSheet } from "@/components/data/FilterSheet";
 import { LocationAdjuster } from "@/components/data/LocationAdjuster";
 import { LocationHeatmap } from "@/components/charts/LocationHeatmap";
 import { PercentileChart } from "@/components/charts/PercentileChart";
@@ -11,28 +14,28 @@ import { useFilteredSalaries } from "@/lib/hooks/useFilteredSalaries";
 import { formatCurrency } from "@/lib/formatters";
 import { SortState, FilterState } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Download, SlidersHorizontal } from "lucide-react";
+import { Download } from "lucide-react";
 import { useQueryStates } from "nuqs";
 import { filterParsers } from "@/lib/searchParams";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { countActiveFilters } from "@/lib/filters/countActiveFilters";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 function HomeContent() {
   const [filters] = useQueryStates(filterParsers);
   const [sort] = useState<SortState>({ field: "totalCompensation", direction: "desc" });
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [tableSorting, setTableSorting] = useState<SortingState>([
+    { id: "totalCompensation", desc: true },
+  ]);
 
   const { data, isPending } = useFilteredSalaries(filters as Partial<FilterState>, sort);
+  const activeFilterCount = countActiveFilters(filters as Partial<FilterState>);
 
   const filteredMedian = React.useMemo(() => {
     if (!data || data.length === 0) return 0;
@@ -40,20 +43,21 @@ function HomeContent() {
     return sorted[Math.floor(sorted.length / 2)].totalCompensation;
   }, [data]);
 
-  const getActiveFiltersCount = () => {
-    let count = 0;
-    if (filters.levels && filters.levels.length > 0) count += filters.levels.length;
-    if (filters.roles && filters.roles.length > 0) count += filters.roles.length;
-    if (filters.companies && filters.companies.length > 0) count += filters.companies.length;
-    if (filters.locations && filters.locations.length > 0) count += filters.locations.length;
-    if (filters.minComp !== null && filters.minComp !== undefined) count += 1;
-    if (filters.maxComp !== null && filters.maxComp !== undefined) count += 1;
-    if (filters.minYoe !== null && filters.minYoe !== undefined) count += 1;
-    if (filters.maxYoe !== null && filters.maxYoe !== undefined) count += 1;
-    if (filters.verified) count += 1;
-    if (filters.currency && filters.currency !== "USD") count += 1;
-    return count;
-  };
+  const filterTabs = (
+    <Tabs defaultValue="filters" className="w-full">
+      <TabsList className="w-full grid grid-cols-2 mb-4">
+        <TabsTrigger value="filters">Filters</TabsTrigger>
+        <TabsTrigger value="location">Location</TabsTrigger>
+      </TabsList>
+      <TabsContent value="filters" className="m-0 mt-2">
+        <FilterPanel />
+      </TabsContent>
+      <TabsContent value="location" className="m-0 mt-2 space-y-6">
+        <LocationAdjuster />
+        <LocationHeatmap data={data} />
+      </TabsContent>
+    </Tabs>
+  );
 
   return (
     <PageShell
@@ -65,103 +69,59 @@ function HomeContent() {
             <Download className="mr-2 h-4 w-4" />
             Export CSV
           </Button>
-          <Button size="sm">
+          <Button size="sm" className="hidden sm:inline-flex">
             Add Salary
           </Button>
         </>
       }
     >
-      <div className="flex flex-col md:flex-row gap-6 mt-4">
-        {/* Mobile Filter & Utility Header */}
-        <div className="flex items-center justify-between md:hidden gap-3 w-full mb-2">
-          <Dialog>
-            <DialogTrigger render={
-              <Button variant="outline" className="relative flex items-center justify-center gap-2 flex-1 sm:flex-initial shadow-xs rounded-xl h-10 px-4" />
-            }>
-              <SlidersHorizontal className="h-4 w-4 text-brand-primary" />
-              <span className="font-semibold text-sm">Filters</span>
-              {getActiveFiltersCount() > 0 && (
-                <Badge variant="default" className="bg-brand-primary text-brand-primary-foreground h-5 min-w-5 rounded-full px-1 flex items-center justify-center font-bold text-[10px]">
-                  {getActiveFiltersCount()}
-                </Badge>
-              )}
-            </DialogTrigger>
-            <DialogContent className="max-w-[calc(100%-2rem)] w-full max-h-[85vh] overflow-y-auto rounded-2xl p-6 bg-background border border-border shadow-2xl">
-              <DialogHeader className="mb-4">
-                <DialogTitle className="text-lg font-bold flex items-center gap-2">
-                  <SlidersHorizontal className="h-5 w-5 text-brand-primary" />
-                  <span>Salary Filters</span>
-                </DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground/90">
-                  Narrow down results using levels, roles, locations, and compensation ranges.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="py-2">
-                <Tabs defaultValue="filters" className="w-full">
-                  <TabsList className="w-full grid grid-cols-2 mb-4">
-                    <TabsTrigger value="filters">Filters</TabsTrigger>
-                    <TabsTrigger value="location">Location</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="filters" className="m-0 mt-2">
-                    <FilterPanel />
-                  </TabsContent>
-                  <TabsContent value="location" className="m-0 mt-2 space-y-6">
-                    <LocationAdjuster />
-                    <LocationHeatmap data={data} />
-                  </TabsContent>
-                </Tabs>
-              </div>
-              <DialogFooter className="mt-6 pt-4 border-t border-border">
-                <DialogClose render={
-                  <Button className="w-full h-10 rounded-xl bg-brand-primary hover:bg-brand-primary/95 text-brand-primary-foreground font-semibold text-sm" />
-                }>
-                  Apply Filters
-                </DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+      <SalaryTableMobileBar
+        activeFilterCount={activeFilterCount}
+        onOpenFilters={() => setFilterSheetOpen(true)}
+        sorting={tableSorting}
+        onSortingChange={setTableSorting}
+      />
 
-          <Button variant="outline" size="sm" className="sm:hidden flex items-center gap-2 h-10 px-4 rounded-xl shadow-xs">
-            <Download className="h-4 w-4 text-muted-foreground" />
-            <span className="font-semibold text-sm">Export</span>
+      <FilterSheet
+        open={filterSheetOpen}
+        onOpenChange={setFilterSheetOpen}
+        activeFilterCount={activeFilterCount}
+        footer={
+          <Button
+            className="w-full h-10 rounded-xl bg-brand-primary hover:bg-brand-primary/95 text-brand-primary-foreground font-semibold text-sm"
+            onClick={() => setFilterSheetOpen(false)}
+          >
+            Apply Filters
           </Button>
-        </div>
+        }
+      >
+        {filterTabs}
+      </FilterSheet>
 
-        {/* Filter & Location Sidebar (Desktop) */}
-        <div className="hidden md:block w-[320px] shrink-0">
-          <Tabs defaultValue="filters" className="w-full">
-            <TabsList className="w-full grid grid-cols-2 mb-4">
-              <TabsTrigger value="filters">Filters</TabsTrigger>
-              <TabsTrigger value="location">Location</TabsTrigger>
-            </TabsList>
-            <TabsContent value="filters" className="m-0 mt-2">
-              <FilterPanel />
-            </TabsContent>
-            <TabsContent value="location" className="m-0 mt-2 space-y-6">
-              <LocationAdjuster />
-              <LocationHeatmap data={data} />
-            </TabsContent>
-          </Tabs>
-        </div>
+      <div className="flex flex-col md:flex-row gap-6 mt-2 md:mt-4">
+        <div className="hidden md:block w-[320px] shrink-0">{filterTabs}</div>
 
-        {/* Main Table Area */}
         <div className="flex-1 min-w-0 flex flex-col gap-4">
-          
-          {/* Stats Header */}
           <div className="flex flex-wrap items-center justify-between bg-card border rounded-lg p-3 px-4 shadow-sm gap-2">
             <div className="text-sm font-medium text-muted-foreground flex flex-wrap items-center gap-2">
               <span className="font-bold text-foreground">{data.length}</span> data points
               <span className="hidden sm:inline">&middot;</span>
-              Median <span className="font-bold text-foreground">{formatCurrency(filteredMedian, (filters.currency as string) || "USD", true)}</span>
+              <span className="sm:hidden block w-full" />
+              Median{" "}
+              <span className="font-bold text-foreground">
+                {formatCurrency(filteredMedian, (filters.currency as string) || "USD", true)}
+              </span>
               <span className="hidden sm:inline">&middot;</span>
-              <span>Updated 3 days ago</span>
+              <span className="hidden sm:inline">Updated 3 days ago</span>
             </div>
           </div>
 
-          {/* Distribution Panel */}
           {data.length > 5 && (
             <Accordion className="w-full">
-              <AccordionItem value="distribution" className="border rounded-lg bg-card shadow-sm px-4 data-[state=open]:pb-4 border-b-0">
+              <AccordionItem
+                value="distribution"
+                className="border rounded-lg bg-card shadow-sm px-4 data-[state=open]:pb-4 border-b-0"
+              >
                 <AccordionTrigger className="hover:no-underline py-3 text-sm font-semibold">
                   Distribution Shape
                 </AccordionTrigger>
@@ -173,7 +133,13 @@ function HomeContent() {
           )}
 
           <Suspense fallback={<SalaryTable.Skeleton />}>
-            <SalaryTable data={data} isLoading={false} isPending={isPending} />
+            <SalaryTable
+              data={data}
+              isLoading={false}
+              isPending={isPending}
+              sorting={tableSorting}
+              onSortingChange={setTableSorting}
+            />
           </Suspense>
         </div>
       </div>
@@ -183,11 +149,13 @@ function HomeContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-primary"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-primary" />
+        </div>
+      }
+    >
       <HomeContent />
     </Suspense>
   );

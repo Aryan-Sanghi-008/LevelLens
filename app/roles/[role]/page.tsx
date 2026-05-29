@@ -67,7 +67,7 @@ export default function RolePage({ params }: { params: { role: string } }) {
   const overallTopCompany = topCompanies[0]?.meta?.name || "N/A";
 
   return (
-    <div className="flex flex-col gap-6 p-6 lg:p-8 max-w-7xl mx-auto w-full">
+    <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full">
       <div className="flex flex-col gap-2 border-b border-border pb-6">
         <div className="flex items-center gap-3 text-muted-foreground mb-2">
           <Briefcase className="size-5" />
@@ -121,17 +121,23 @@ export default function RolePage({ params }: { params: { role: string } }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 mt-4">
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 order-1 lg:order-none">
           <Tabs defaultValue="ladder" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TabsTrigger value="ladder">Level Ladder</TabsTrigger>
-              <TabsTrigger value="table">Salary Table</TabsTrigger>
-              <TabsTrigger value="companies">Companies</TabsTrigger>
+            <TabsList className="flex w-full h-auto overflow-x-auto justify-start gap-1 mb-6 p-1 lg:grid lg:grid-cols-3 lg:overflow-visible">
+              <TabsTrigger value="ladder" className="shrink-0">
+                Level Ladder
+              </TabsTrigger>
+              <TabsTrigger value="table" className="shrink-0">
+                Salary Table
+              </TabsTrigger>
+              <TabsTrigger value="companies" className="shrink-0">
+                Companies
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent
               value="ladder"
-              className="bg-card border border-border rounded-xl p-6 shadow-sm"
+              className="bg-card border border-border rounded-xl p-4 md:p-6 shadow-sm overflow-x-auto"
             >
               <div className="mb-6">
                 <h2 className="text-xl font-bold">Career Progression</h2>
@@ -145,7 +151,7 @@ export default function RolePage({ params }: { params: { role: string } }) {
             </TabsContent>
 
             <TabsContent value="table">
-              <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+              <div className="bg-card border border-border rounded-xl p-4 md:p-6 shadow-sm">
                 <div className="mb-6">
                   <h2 className="text-xl font-bold">Raw Data</h2>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -200,7 +206,7 @@ export default function RolePage({ params }: { params: { role: string } }) {
           </Tabs>
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 order-2 lg:order-none">
           <Card>
             <CardHeader>
               <CardTitle>Top Paying</CardTitle>

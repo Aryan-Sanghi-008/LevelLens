@@ -2,64 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  Table2, 
-  Building2, 
-  Briefcase, 
-  GitCompare, 
-  TrendingUp, 
-  MapPin, 
-  Info, 
-  BookOpen,
-  BarChart3,
-  PlusCircle,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface NavItem {
-  title: string;
-  href: string;
-  icon: React.ElementType;
-  badge?: string;
-}
-
-interface NavSection {
-  title: string;
-  items: NavItem[];
-}
-
-const NAV_DATA: NavSection[] = [
-  {
-    title: "Explore",
-    items: [
-      { title: "Salary Table", href: "/", icon: Table2 },
-      { title: "Companies", href: "/companies", icon: Building2 },
-      { title: "Roles", href: "/roles", icon: Briefcase },
-      { title: "Analytics", href: "/analytics", icon: BarChart3 },
-    ],
-  },
-  {
-    title: "Tools",
-    items: [
-      { title: "Compare", href: "/compare", icon: GitCompare },
-      { title: "Level Ladder", href: "/tools/ladder", icon: TrendingUp },
-      { title: "Location Adjust", href: "/tools/location", icon: MapPin },
-    ],
-  },
-  {
-    title: "Contribute",
-    items: [
-      { title: "Submit Data", href: "/submit", icon: PlusCircle, badge: "New" },
-    ],
-  },
-  {
-    title: "Resources",
-    items: [
-      { title: "Levels Guide", href: "/levels", icon: BookOpen },
-      { title: "About", href: "/about", icon: Info },
-    ],
-  },
-];
+import { NAV_DATA } from "@/lib/navigation";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -74,21 +18,28 @@ export function Sidebar() {
             </h4>
             <ul className="space-y-1">
               {section.items.map((item) => {
-                const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== "/");
-                
+                const isActive =
+                  pathname === item.href ||
+                  (pathname.startsWith(item.href) && item.href !== "/");
+
                 return (
                   <li key={item.href}>
                     <Link
                       href={item.href}
                       className={cn(
                         "group flex items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium transition-colors hover:text-foreground",
-                        isActive 
-                          ? "border-l-2 border-brand-primary text-foreground bg-transparent pl-[6px]" 
+                        isActive
+                          ? "border-l-2 border-brand-primary text-foreground bg-transparent pl-[6px]"
                           : "border-l-2 border-transparent text-muted-foreground"
                       )}
                     >
                       <div className="flex items-center gap-2.5">
-                        <item.icon className={cn("h-4 w-4", isActive ? "text-brand-primary" : "text-muted-foreground")} />
+                        <item.icon
+                          className={cn(
+                            "h-4 w-4",
+                            isActive ? "text-brand-primary" : "text-muted-foreground"
+                          )}
+                        />
                         {item.title}
                       </div>
                       {item.badge && (
