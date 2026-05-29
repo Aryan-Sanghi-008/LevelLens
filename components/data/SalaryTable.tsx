@@ -46,6 +46,7 @@ import { CompensationRecord } from "@/types";
 import Image from "next/image";
 import { formatCurrency, getLevelColor, getLevelBadgeVariant, formatYoE } from "@/lib/formatters";
 import { useComparisonStore } from "@/lib/hooks/useComparisonStore";
+import { SalaryDetailDrawer } from "@/components/data/SalaryDetailDrawer";
 
 function getCountryFlag(country: string) {
   const flags: Record<string, string> = {
@@ -82,6 +83,7 @@ export function SalaryTable({ data, isLoading }: SalaryTableProps) {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [selectedRecord, setSelectedRecord] = React.useState<CompensationRecord | null>(null);
   const addToComparison = useComparisonStore((state) => state.addToComparison);
 
 
@@ -378,8 +380,7 @@ export function SalaryTable({ data, isLoading }: SalaryTableProps) {
                       row.getIsSelected() && "border-l-2 border-l-brand-primary"
                     )}
                     onClick={() => {
-                      // Stub drawer open
-                      console.log("Open drawer for", row.original.id);
+                      setSelectedRecord(row.original);
                     }}
                   >
                     {row.getVisibleCells().map((cell, idx) => {
@@ -473,6 +474,12 @@ export function SalaryTable({ data, isLoading }: SalaryTableProps) {
           </div>
         </div>
       </div>
+      
+      <SalaryDetailDrawer 
+        record={selectedRecord} 
+        isOpen={!!selectedRecord} 
+        onClose={() => setSelectedRecord(null)} 
+      />
     </div>
   );
 }
