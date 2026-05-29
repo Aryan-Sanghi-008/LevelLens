@@ -55,7 +55,7 @@ const NAV_DATA: NavSection[] = [
   {
     title: "Resources",
     items: [
-      { title: "How Levels Work", href: "/resources/levels", icon: BookOpen },
+      { title: "Levels Guide", href: "/levels", icon: BookOpen },
       { title: "About", href: "/about", icon: Info },
     ],
   },
