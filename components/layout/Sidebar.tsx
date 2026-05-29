@@ -11,7 +11,8 @@ import {
   MapPin, 
   Info, 
   BookOpen,
-  BarChart3
+  BarChart3,
+  PlusCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +44,12 @@ const NAV_DATA: NavSection[] = [
       { title: "Compare", href: "/compare", icon: GitCompare },
       { title: "Level Ladder", href: "/tools/ladder", icon: TrendingUp },
       { title: "Location Adjust", href: "/tools/location", icon: MapPin },
+    ],
+  },
+  {
+    title: "Contribute",
+    items: [
+      { title: "Submit Data", href: "/submit", icon: PlusCircle, badge: "New" },
     ],
   },
   {

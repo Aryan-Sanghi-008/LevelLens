@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { CompensationRecord, FilterState, SortState } from '@/types';
 import { MOCK_SALARIES } from '@/lib/data/mock/salaries';
 import { convertCurrency } from '@/lib/formatters';
+import { useSubmissionStore } from '@/lib/hooks/useSubmissionStore';
 
 interface UseFilteredSalariesResult {
   data: CompensationRecord[];
@@ -14,12 +15,18 @@ export function useFilteredSalaries(
   filters: Partial<FilterState>,
   sort: SortState
 ): UseFilteredSalariesResult {
+  const submissions = useSubmissionStore((s) => s.submissions);
+
   const result = useMemo(() => {
     const targetCurrency = filters.currency || "USD";
 
+    // Merge user submissions (prepend so they appear first) with the mock dataset
+    const ALL_SALARIES: CompensationRecord[] = [...submissions, ...MOCK_SALARIES];
+
+
     // Map all records to the target currency first
     // This allows mathematically correct comparisons, sorting, and displays.
-    const mapped = MOCK_SALARIES.map(r => {
+    const mapped = ALL_SALARIES.map(r => {
       if (r.currency === targetCurrency) return r;
       return {
         ...r,
@@ -104,11 +111,11 @@ export function useFilteredSalaries(
 
     return {
       data: filtered,
-      totalCount: MOCK_SALARIES.length,
+      totalCount: ALL_SALARIES.length,
       filteredCount: filtered.length,
       isFiltered
     };
-  }, [filters, sort]);
+  }, [filters, sort, submissions]);
 
   return result;
 }
