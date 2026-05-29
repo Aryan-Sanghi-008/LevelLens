@@ -1,4 +1,4 @@
-import { useMemo, useTransition, useCallback, useState, useEffect } from 'react';
+import { useMemo, useTransition, useState, useEffect, useRef } from 'react';
 import { CompensationRecord, FilterState, SortState } from '@/types';
 import { MOCK_SALARIES } from '@/lib/data/mock/salaries';
 import { convertCurrency } from '@/lib/formatters';
@@ -19,21 +19,23 @@ function computeFilteredSalaries(
   sort: SortState
 ): { data: CompensationRecord[]; isFiltered: boolean } {
   const targetCurrency = filters.currency || 'USD';
+  const needsConversion = all.some((r) => r.currency !== targetCurrency);
 
-  // Currency conversion pass
-  const mapped = all.map((r) => {
-    if (r.currency === targetCurrency) return r;
-    return {
-      ...r,
-      baseSalary: Math.round(convertCurrency(r.baseSalary, r.currency, targetCurrency)),
-      stockPerYear: Math.round(convertCurrency(r.stockPerYear, r.currency, targetCurrency)),
-      bonus: Math.round(convertCurrency(r.bonus, r.currency, targetCurrency)),
-      totalCompensation: Math.round(
-        convertCurrency(r.totalCompensation, r.currency, targetCurrency)
-      ),
-      currency: targetCurrency,
-    };
-  });
+  const mapped = needsConversion
+    ? all.map((r) => {
+        if (r.currency === targetCurrency) return r;
+        return {
+          ...r,
+          baseSalary: Math.round(convertCurrency(r.baseSalary, r.currency, targetCurrency)),
+          stockPerYear: Math.round(convertCurrency(r.stockPerYear, r.currency, targetCurrency)),
+          bonus: Math.round(convertCurrency(r.bonus, r.currency, targetCurrency)),
+          totalCompensation: Math.round(
+            convertCurrency(r.totalCompensation, r.currency, targetCurrency)
+          ),
+          currency: targetCurrency,
+        };
+      })
+    : all;
 
   let filtered = mapped;
   let isFiltered = false;
@@ -80,7 +82,6 @@ function computeFilteredSalaries(
     isFiltered = true;
   }
 
-  // Sort in-place on a copy (avoid mutating mapped)
   const sorted = [...filtered].sort((a, b) => {
     let aVal: number | string = a[sort.field] as number | string;
     let bVal: number | string = b[sort.field] as number | string;
@@ -107,45 +108,38 @@ export function useFilteredSalaries(
 ): UseFilteredSalariesResult {
   const submissions = useSubmissionStore((s) => s.submissions);
   const [isPending, startTransition] = useTransition();
+  const isMount = useRef(true);
 
-  // The merged source-of-truth dataset (memoised separately so filter changes
-  // don't needlessly reconstruct the full array)
   const allSalaries = useMemo<CompensationRecord[]>(
     () => [...submissions, ...MOCK_SALARIES],
     [submissions]
   );
 
-  // Eagerly compute on first render (synchronous) so the table is populated
-  // immediately. Subsequent filter changes go through startTransition.
-  const [result, setResult] = useState<{
-    data: CompensationRecord[];
-    isFiltered: boolean;
-  }>(() => computeFilteredSalaries(allSalaries, filters, sort));
+  const [appliedFilters, setAppliedFilters] = useState(filters);
+  const [appliedSort, setAppliedSort] = useState(sort);
 
-  const recompute = useCallback(
-    (
-      all: CompensationRecord[],
-      f: Partial<FilterState>,
-      s: SortState
-    ) => {
-      startTransition(() => {
-        setResult(computeFilteredSalaries(all, f, s));
-      });
-    },
-    []
+  useEffect(() => {
+    if (isMount.current) {
+      isMount.current = false;
+      return;
+    }
+
+    startTransition(() => {
+      setAppliedFilters(filters);
+      setAppliedSort(sort);
+    });
+  }, [filters, sort]);
+
+  const { data, isFiltered } = useMemo(
+    () => computeFilteredSalaries(allSalaries, appliedFilters, appliedSort),
+    [allSalaries, appliedFilters, appliedSort]
   );
 
-  // Re-run whenever inputs change
-  useEffect(() => {
-    recompute(allSalaries, filters, sort);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allSalaries, filters, sort]);
-
   return {
-    data: result.data,
+    data,
     totalCount: allSalaries.length,
-    filteredCount: result.data.length,
-    isFiltered: result.isFiltered,
+    filteredCount: data.length,
+    isFiltered,
     isPending,
   };
 }

@@ -1,11 +1,11 @@
-import React from "react";
+import React, { Suspense } from "react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
 import { MOCK_COMPANIES } from "@/lib/data/mock/companies";
 import { slugify, formatCurrency } from "@/lib/formatters";
 import { LevelLadder } from "@/components/charts/LevelLadder";
-import { SalaryTable } from "@/components/data/SalaryTable";
+import { SalaryTable, SalaryTableSkeleton } from "@/components/data/SalaryTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Briefcase, Building2, Calendar, Users } from "lucide-react";
@@ -129,7 +129,9 @@ export default function RolePage({ params }: { params: { role: string } }) {
                   <h2 className="text-xl font-bold">Raw Data</h2>
                   <p className="text-sm text-muted-foreground mt-1">All compensation records for {roleName}.</p>
                 </div>
-                <SalaryTable data={records} />
+                <Suspense fallback={<SalaryTableSkeleton />}>
+                  <SalaryTable data={records} />
+                </Suspense>
               </div>
             </TabsContent>
             

@@ -2,7 +2,9 @@
 
 import * as React from "react";
 import {
+  Column,
   ColumnDef,
+  Table,
   VisibilityState,
   flexRender,
   getCoreRowModel,
@@ -48,7 +50,7 @@ import { SalaryDetailDrawer } from "@/components/data/SalaryDetailDrawer";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 /** Fixed row height — must match the actual rendered row height */
-const ROW_HEIGHT = 56;
+export const ROW_HEIGHT = 56;
 const OVERSCAN = 10;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -122,6 +124,27 @@ function ScrollPositionBar({
   );
 }
 
+// ─── Loading fallback (for Suspense boundaries) ───────────────────────────────
+
+export function SalaryTableSkeleton({ rows = 8 }: { rows?: number }) {
+  return (
+    <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="h-10 bg-muted/40 border-b border-border" />
+      {Array.from({ length: rows }).map((_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-4 px-4 border-b border-border/50"
+          style={{ height: ROW_HEIGHT }}
+        >
+          <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+          <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+          <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ─── SalaryTable ─────────────────────────────────────────────────────────────
 
 export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
@@ -135,6 +158,52 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
     React.useCallback((state) => state.addToComparison, [])
   );
 
+  const handleCloseDrawer = React.useCallback(() => setSelectedRecord(null), []);
+
+  const handleColumnSort = React.useCallback(
+    (column: Column<CompensationRecord, unknown>) => {
+      column.toggleSorting(column.getIsSorted() === "asc");
+    },
+    []
+  );
+
+  const handleSelectAll = React.useCallback(
+    (table: Table<CompensationRecord>, value: boolean | string) => {
+      table.toggleAllRowsSelected(!!value);
+    },
+    []
+  );
+
+  const handleRowSelect = React.useCallback(
+    (row: Row<CompensationRecord>, value: boolean | string) => {
+      row.toggleSelected(!!value);
+    },
+    []
+  );
+
+  const handleAddToComparison = React.useCallback(
+    (record: CompensationRecord) => {
+      addToComparison({
+        companyId: record.company.slug,
+        level: record.normalizedLevel,
+        role: record.role,
+      });
+    },
+    [addToComparison]
+  );
+
+  const handleCompareClick = React.useCallback(
+    (e: React.MouseEvent, record: CompensationRecord) => {
+      e.stopPropagation();
+      handleAddToComparison(record);
+    },
+    [handleAddToComparison]
+  );
+
+  const handleDetailClick = React.useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
   // ── Column definitions (memoised) ──────────────────────────────────────────
 
   const columns = React.useMemo<ColumnDef<CompensationRecord>[]>(
@@ -144,7 +213,7 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
         header: ({ table }) => (
           <Checkbox
             checked={table.getIsAllRowsSelected()}
-            onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
+            onCheckedChange={(value) => handleSelectAll(table, value)}
             aria-label="Select all"
             className="translate-y-[2px]"
           />
@@ -152,7 +221,7 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
         cell: ({ row }) => (
           <Checkbox
             checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            onCheckedChange={(value) => handleRowSelect(row, value)}
             aria-label="Select row"
             className="translate-y-[2px]"
           />
@@ -240,7 +309,7 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
             variant="ghost"
             size="sm"
             className="-ml-3 h-8"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            onClick={() => handleColumnSort(column)}
           >
             Base
             <ArrowUpDown className="ml-1.5 h-3 w-3" />
@@ -264,7 +333,7 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
             variant="ghost"
             size="sm"
             className="-ml-3 h-8"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            onClick={() => handleColumnSort(column)}
           >
             Stock/yr
             <ArrowUpDown className="ml-1.5 h-3 w-3" />
@@ -300,7 +369,7 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
             variant="ghost"
             size="sm"
             className="-ml-3 h-8"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            onClick={() => handleColumnSort(column)}
           >
             Total Comp
             <ArrowUpDown className="ml-1.5 h-3 w-3" />
@@ -334,7 +403,7 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
             variant="ghost"
             size="sm"
             className="-ml-3 h-8"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            onClick={() => handleColumnSort(column)}
           >
             Reported
             <ArrowUpDown className="ml-1.5 h-3 w-3" />
@@ -385,14 +454,7 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
               size="icon"
               className="h-7 w-7 text-muted-foreground hover:text-primary"
               title="Add to compare"
-              onClick={(e) => {
-                e.stopPropagation();
-                addToComparison({
-                  companyId: row.original.company.slug,
-                  level: row.original.normalizedLevel,
-                  role: row.original.role,
-                });
-              }}
+              onClick={(e) => handleCompareClick(e, row.original)}
             >
               <Plus className="h-3.5 w-3.5" />
             </Button>
@@ -401,7 +463,7 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
               size="icon"
               className="h-7 w-7 text-muted-foreground"
               title="Open detail"
-              onClick={(e) => e.stopPropagation()}
+              onClick={handleDetailClick}
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </Button>
@@ -412,7 +474,13 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
         enableSorting: false,
       },
     ],
-    [addToComparison]
+    [
+      handleSelectAll,
+      handleRowSelect,
+      handleColumnSort,
+      handleCompareClick,
+      handleDetailClick,
+    ]
   );
 
   // ── TanStack Table instance ────────────────────────────────────────────────
@@ -431,6 +499,14 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
   });
 
   const { rows } = table.getRowModel();
+
+  const tableStats = React.useMemo(
+    () => ({
+      totalRows: rows.length,
+      selectedCount: Object.values(rowSelection).filter(Boolean).length,
+    }),
+    [rows.length, rowSelection]
+  );
 
   // ── Virtual scrolling ──────────────────────────────────────────────────────
 
@@ -495,12 +571,6 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
     <div className="w-full space-y-3">
       {/* Toolbar */}
       <div className="flex items-center justify-end gap-2">
-        {isPending && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground animate-in fade-in duration-200">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            Filtering…
-          </div>
-        )}
         <DropdownMenu>
           <DropdownMenuTrigger
             className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3"
@@ -528,6 +598,14 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
 
       {/* Table Container */}
       <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden relative">
+        {isPending && (
+          <div
+            className="absolute top-3 right-3 z-40 pointer-events-none"
+            aria-label="Filtering"
+          >
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          </div>
+        )}
         {/* Sticky Header — rendered outside the scroll container */}
         <div className="overflow-x-auto bg-muted/40 border-b border-border">
           <table
@@ -701,11 +779,13 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
         {!isLoading && rows.length > 0 && (
           <div className="flex items-center justify-between px-4 py-2.5 border-t border-border bg-muted/20 text-xs text-muted-foreground">
             <span>
-              <span className="font-semibold text-foreground">{rows.length.toLocaleString()}</span>{" "}
+              <span className="font-semibold text-foreground">
+                {tableStats.totalRows.toLocaleString()}
+              </span>{" "}
               records
-              {rowSelection && Object.keys(rowSelection).length > 0 && (
+              {tableStats.selectedCount > 0 && (
                 <span className="ml-2 text-primary font-medium">
-                  · {Object.keys(rowSelection).length} selected
+                  · {tableStats.selectedCount} selected
                 </span>
               )}
             </span>
@@ -719,7 +799,7 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
       <SalaryDetailDrawer
         record={selectedRecord}
         isOpen={!!selectedRecord}
-        onClose={React.useCallback(() => setSelectedRecord(null), [])}
+        onClose={handleCloseDrawer}
       />
     </div>
   );

@@ -2,7 +2,7 @@
 
 import React, { useState, Suspense } from "react";
 import { PageShell } from "@/components/layout/PageShell";
-import { SalaryTable } from "@/components/data/SalaryTable";
+import { SalaryTable, SalaryTableSkeleton } from "@/components/data/SalaryTable";
 import { FilterPanel } from "@/components/data/FilterPanel";
 import { LocationAdjuster } from "@/components/data/LocationAdjuster";
 import { LocationHeatmap } from "@/components/charts/LocationHeatmap";
@@ -172,18 +172,7 @@ function HomeContent() {
             </Accordion>
           )}
 
-          <Suspense fallback={
-            <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-              <div className="h-10 bg-muted/40 border-b border-border" />
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-4 px-4 border-b border-border/50" style={{ height: 56 }}>
-                  <div className="h-4 w-24 bg-muted rounded animate-pulse" />
-                  <div className="h-4 w-32 bg-muted rounded animate-pulse" />
-                  <div className="h-4 w-20 bg-muted rounded animate-pulse" />
-                </div>
-              ))}
-            </div>
-          }>
+          <Suspense fallback={<SalaryTableSkeleton />}>
             <SalaryTable data={data} isLoading={false} isPending={isPending} />
           </Suspense>
         </div>
