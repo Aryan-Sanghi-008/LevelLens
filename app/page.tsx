@@ -4,6 +4,8 @@ import React, { useState, Suspense } from "react";
 import { PageShell } from "@/components/layout/PageShell";
 import { SalaryTable } from "@/components/data/SalaryTable";
 import { FilterPanel } from "@/components/data/FilterPanel";
+import { LocationAdjuster } from "@/components/data/LocationAdjuster";
+import { LocationHeatmap } from "@/components/charts/LocationHeatmap";
 import { useFilteredSalaries } from "@/lib/hooks/useFilteredSalaries";
 import { SortState, FilterState } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -21,6 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function HomeContent() {
   const [filters] = useQueryStates(filterParsers);
@@ -85,7 +88,19 @@ function HomeContent() {
                 </DialogDescription>
               </DialogHeader>
               <div className="py-2">
-                <FilterPanel />
+                <Tabs defaultValue="filters" className="w-full">
+                  <TabsList className="w-full grid grid-cols-2 mb-4">
+                    <TabsTrigger value="filters">Filters</TabsTrigger>
+                    <TabsTrigger value="location">Location</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="filters" className="m-0 mt-2">
+                    <FilterPanel />
+                  </TabsContent>
+                  <TabsContent value="location" className="m-0 mt-2 space-y-6">
+                    <LocationAdjuster />
+                    <LocationHeatmap data={data} />
+                  </TabsContent>
+                </Tabs>
               </div>
               <DialogFooter className="mt-6 pt-4 border-t border-border">
                 <DialogClose render={
@@ -103,9 +118,21 @@ function HomeContent() {
           </Button>
         </div>
 
-        {/* Filter Sidebar (Desktop) */}
-        <div className="hidden md:block w-[280px] shrink-0">
-          <FilterPanel />
+        {/* Filter & Location Sidebar (Desktop) */}
+        <div className="hidden md:block w-[320px] shrink-0">
+          <Tabs defaultValue="filters" className="w-full">
+            <TabsList className="w-full grid grid-cols-2 mb-4">
+              <TabsTrigger value="filters">Filters</TabsTrigger>
+              <TabsTrigger value="location">Location</TabsTrigger>
+            </TabsList>
+            <TabsContent value="filters" className="m-0 mt-2">
+              <FilterPanel />
+            </TabsContent>
+            <TabsContent value="location" className="m-0 mt-2 space-y-6">
+              <LocationAdjuster />
+              <LocationHeatmap data={data} />
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Main Table Area */}

@@ -39,8 +39,7 @@ export default function CompanyProfilePage({ params }: { params: { slug: string 
 
   // Data for Levels BarChart
   const chartData = Object.entries(levelDistribution)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    .filter(([_, count]) => count > 0)
+    .filter(([, count]) => count > 0)
     .map(([level, count]) => ({
       level: level as NormalizedLevel,
       count,
