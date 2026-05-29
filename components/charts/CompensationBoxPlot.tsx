@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { formatCurrency } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useChartTheme } from "@/lib/hooks/useChartTheme";
 
 export interface BoxPlotData {
   level: string;
@@ -30,7 +31,8 @@ interface CompensationBoxPlotProps {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomBoxPlot = (props: any) => {
-  const { cy, xAxis, p10, p25, median, p75, p90 } = props;
+  const { cy, xAxis, p10, p25, median, p75, p90, stroke } = props;
+  const color = stroke || "#3b82f6";
 
   // Recharts passes payload inside the node or as separate props if we map them
   const p10X = xAxis.scale(p10);
@@ -45,9 +47,9 @@ const CustomBoxPlot = (props: any) => {
   return (
     <g>
       {/* Whiskers */}
-      <line x1={p10X} y1={cy} x2={p90X} y2={cy} stroke="var(--color-primary, #3b82f6)" strokeWidth={2} opacity={0.5} />
-      <line x1={p10X} y1={cy - 6} x2={p10X} y2={cy + 6} stroke="var(--color-primary, #3b82f6)" strokeWidth={2} opacity={0.7} />
-      <line x1={p90X} y1={cy - 6} x2={p90X} y2={cy + 6} stroke="var(--color-primary, #3b82f6)" strokeWidth={2} opacity={0.7} />
+      <line x1={p10X} y1={cy} x2={p90X} y2={cy} stroke={color} strokeWidth={2} opacity={0.5} />
+      <line x1={p10X} y1={cy - 6} x2={p10X} y2={cy + 6} stroke={color} strokeWidth={2} opacity={0.7} />
+      <line x1={p90X} y1={cy - 6} x2={p90X} y2={cy + 6} stroke={color} strokeWidth={2} opacity={0.7} />
 
       {/* Box */}
       <rect
@@ -55,15 +57,15 @@ const CustomBoxPlot = (props: any) => {
         y={y}
         width={p75X - p25X}
         height={height}
-        fill="var(--color-primary, #3b82f6)"
+        fill={color}
         fillOpacity={0.2}
-        stroke="var(--color-primary, #3b82f6)"
+        stroke={color}
         strokeWidth={2}
         rx={2}
       />
 
       {/* Median Line */}
-      <line x1={medianX} y1={y} x2={medianX} y2={y + height} stroke="var(--color-primary, #3b82f6)" strokeWidth={3} />
+      <line x1={medianX} y1={y} x2={medianX} y2={y + height} stroke={color} strokeWidth={3} />
     </g>
   );
 };
@@ -92,6 +94,8 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export function CompensationBoxPlot({ data, isLoading }: CompensationBoxPlotProps) {
+  const theme = useChartTheme();
+
   if (isLoading) return <CompensationBoxPlot.Skeleton />;
   if (!data || data.length === 0) return <div className="h-[300px] flex items-center justify-center text-muted-foreground">No data available</div>;
 
@@ -103,25 +107,25 @@ export function CompensationBoxPlot({ data, isLoading }: CompensationBoxPlotProp
           layout="vertical"
           margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
         >
-          <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.2} />
+          <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke={theme.border} opacity={0.2} />
           <XAxis 
             type="number" 
             tickFormatter={(value) => formatCurrency(value, "INR", true)}
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 12, fill: theme.mutedForeground }}
           />
           <YAxis 
             dataKey="level" 
             type="category" 
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 12, fill: "hsl(var(--foreground))" }}
+            tick={{ fontSize: 12, fill: theme.foreground }}
             width={100}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.05)' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: theme.mutedForeground, opacity: 0.08 }} />
           {/* We use Scatter because it allows passing arbitrary complex objects to custom shape easily */}
-          <Scatter dataKey="median" shape={<CustomBoxPlot />} />
+          <Scatter dataKey="median" fill={theme.chart1} stroke={theme.chart1} shape={<CustomBoxPlot />} />
         </ComposedChart>
       </ResponsiveContainer>
     </div>

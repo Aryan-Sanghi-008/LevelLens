@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { formatCurrency } from "@/lib/formatters";
 import { CompensationRecord } from "@/types";
+import { useChartTheme } from "@/lib/hooks/useChartTheme";
 
 interface PercentileChartProps {
   data: CompensationRecord[];
@@ -20,6 +21,8 @@ interface PercentileChartProps {
 }
 
 export function PercentileChart({ data, highlightValue }: PercentileChartProps) {
+  const theme = useChartTheme();
+
   const { chartData, percentiles, domain } = useMemo(() => {
     if (!data || data.length === 0) return { chartData: [], percentiles: null, domain: [0, 0] };
 
@@ -93,31 +96,31 @@ export function PercentileChart({ data, highlightValue }: PercentileChartProps) 
         <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
           <defs>
             <linearGradient id="splitColor" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.2} />
-              <stop offset={`${p25Off}%`} stopColor="hsl(var(--muted-foreground))" stopOpacity={0.2} />
-              <stop offset={`${p25Off}%`} stopColor="hsl(var(--brand-primary))" stopOpacity={0.4} />
-              <stop offset={`${p75Off}%`} stopColor="hsl(var(--brand-primary))" stopOpacity={0.4} />
-              <stop offset={`${p75Off}%`} stopColor="hsl(var(--chart-2))" stopOpacity={0.5} />
-              <stop offset="100%" stopColor="hsl(var(--chart-2))" stopOpacity={0.5} />
+              <stop offset="0%" stopColor={theme.mutedForeground} stopOpacity={0.2} />
+              <stop offset={`${p25Off}%`} stopColor={theme.mutedForeground} stopOpacity={0.2} />
+              <stop offset={`${p25Off}%`} stopColor={theme.chart1} stopOpacity={0.4} />
+              <stop offset={`${p75Off}%`} stopColor={theme.chart1} stopOpacity={0.4} />
+              <stop offset={`${p75Off}%`} stopColor={theme.chart2} stopOpacity={0.5} />
+              <stop offset="100%" stopColor={theme.chart2} stopOpacity={0.5} />
             </linearGradient>
             <linearGradient id="strokeColor" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="hsl(var(--muted-foreground))" />
-              <stop offset={`${p25Off}%`} stopColor="hsl(var(--muted-foreground))" />
-              <stop offset={`${p25Off}%`} stopColor="hsl(var(--brand-primary))" />
-              <stop offset={`${p75Off}%`} stopColor="hsl(var(--brand-primary))" />
-              <stop offset={`${p75Off}%`} stopColor="hsl(var(--chart-2))" />
-              <stop offset="100%" stopColor="hsl(var(--chart-2))" />
+              <stop offset="0%" stopColor={theme.mutedForeground} />
+              <stop offset={`${p25Off}%`} stopColor={theme.mutedForeground} />
+              <stop offset={`${p25Off}%`} stopColor={theme.chart1} />
+              <stop offset={`${p75Off}%`} stopColor={theme.chart1} />
+              <stop offset={`${p75Off}%`} stopColor={theme.chart2} />
+              <stop offset="100%" stopColor={theme.chart2} />
             </linearGradient>
           </defs>
 
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.border} opacity={0.5} />
           
           <XAxis 
             dataKey="bin" 
             type="number"
             domain={domain}
             tickFormatter={(val) => formatCurrency(val, "INR", true)}
-            stroke="hsl(var(--muted-foreground))"
+            stroke={theme.mutedForeground}
             fontSize={11}
             tickLine={false}
             axisLine={false}
@@ -126,7 +129,7 @@ export function PercentileChart({ data, highlightValue }: PercentileChartProps) 
           <YAxis hide />
 
           <Tooltip 
-            cursor={{ stroke: 'hsl(var(--foreground))', strokeWidth: 1, strokeDasharray: '4 4' }}
+            cursor={{ stroke: theme.foreground, strokeWidth: 1, strokeDasharray: '4 4' }}
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
                 const val = payload[0].payload.bin;
@@ -150,21 +153,21 @@ export function PercentileChart({ data, highlightValue }: PercentileChartProps) 
             isAnimationActive={false}
           />
 
-          <ReferenceLine x={percentiles.p50} stroke="hsl(var(--brand-primary))" strokeDasharray="3 3">
-            <text x={0} y={0} dy={-5} fill="hsl(var(--brand-primary))" fontSize={11} fontWeight="bold" textAnchor="middle">
+          <ReferenceLine x={percentiles.p50} stroke={theme.chart1} strokeDasharray="3 3">
+            <text x={0} y={0} dy={-5} fill={theme.chart1} fontSize={11} fontWeight="bold" textAnchor="middle">
               Median
             </text>
           </ReferenceLine>
           
-          <ReferenceLine x={percentiles.p90} stroke="hsl(var(--chart-2))" strokeDasharray="3 3">
-            <text x={0} y={0} dy={-5} fill="hsl(var(--chart-2))" fontSize={11} fontWeight="bold" textAnchor="middle">
+          <ReferenceLine x={percentiles.p90} stroke={theme.chart2} strokeDasharray="3 3">
+            <text x={0} y={0} dy={-5} fill={theme.chart2} fontSize={11} fontWeight="bold" textAnchor="middle">
               P90
             </text>
           </ReferenceLine>
 
           {highlightValue !== undefined && (
-            <ReferenceLine x={highlightValue} stroke="hsl(var(--foreground))" strokeWidth={2}>
-              <text x={0} y={0} dy={-5} fill="hsl(var(--foreground))" fontSize={12} fontWeight="bold" textAnchor="middle">
+            <ReferenceLine x={highlightValue} stroke={theme.foreground} strokeWidth={2}>
+              <text x={0} y={0} dy={-5} fill={theme.foreground} fontSize={12} fontWeight="bold" textAnchor="middle">
                 You
               </text>
             </ReferenceLine>

@@ -136,7 +136,7 @@ export function LevelLadder({ records }: LevelLadderProps) {
               {i > 0 && (
                 <div className="absolute -top-8 left-12 flex flex-col items-center justify-center text-muted-foreground">
                   <div className="w-px h-6 bg-border" />
-                  <div className="flex items-center gap-0.5 text-xs font-semibold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded-full z-10 absolute -translate-y-1/2 top-1/2 bg-background border border-border">
+                  <div className="flex items-center gap-0.5 text-xs font-semibold text-emerald-600 px-1.5 py-0.5 rounded-full z-10 absolute -translate-y-1/2 top-1/2 bg-background border border-border">
                     <ArrowUp className="size-3" />
                     {percentJump}%
                   </div>

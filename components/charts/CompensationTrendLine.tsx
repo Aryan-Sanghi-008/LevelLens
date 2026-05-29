@@ -12,6 +12,7 @@ import {
   Legend,
 } from "recharts";
 import { formatCurrency } from "@/lib/formatters";
+import { useChartTheme } from "@/lib/hooks/useChartTheme";
 
 export interface TrendLineData {
   period: string; // e.g. "Q1 2024"
@@ -24,13 +25,7 @@ interface CompensationTrendLineProps {
   isLoading?: boolean;
 }
 
-const DEFAULT_COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-];
+
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -57,6 +52,16 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export function CompensationTrendLine({ data, dataKeys, isLoading }: CompensationTrendLineProps) {
+  const theme = useChartTheme();
+  
+  const defaultColors = [
+    theme.chart1,
+    theme.chart2,
+    theme.chart3,
+    theme.chart4,
+    theme.chart5,
+  ];
+
   if (isLoading) return <CompensationTrendLine.Skeleton />;
   if (!data || data.length === 0) return <div className="h-[300px] flex items-center justify-center text-muted-foreground">No trend data available</div>;
 
@@ -67,19 +72,19 @@ export function CompensationTrendLine({ data, dataKeys, isLoading }: Compensatio
           data={data}
           margin={{ top: 10, right: 10, left: 20, bottom: 0 }}
         >
-          <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.border} opacity={0.2} />
           <XAxis 
             dataKey="period" 
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 12, fill: theme.mutedForeground }}
             dy={10}
           />
           <YAxis 
             tickFormatter={(value) => formatCurrency(value, "INR", true)}
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 12, fill: theme.mutedForeground }}
           />
           <Tooltip content={<CustomTooltip />} />
           {dataKeys.length > 1 && (
@@ -94,7 +99,7 @@ export function CompensationTrendLine({ data, dataKeys, isLoading }: Compensatio
               type="monotone"
               dataKey={dk.key}
               name={dk.name}
-              stroke={dk.color || DEFAULT_COLORS[idx % DEFAULT_COLORS.length]}
+              stroke={dk.color || defaultColors[idx % defaultColors.length]}
               strokeWidth={3}
               dot={{ r: 4, strokeWidth: 2 }}
               activeDot={{ r: 6, strokeWidth: 0 }}

@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -47,6 +48,7 @@ const config: Config = {
           accent: "var(--brand-accent)",
         },
         surface: "var(--surface)",
+        sidebar: "var(--sidebar)",
         chart: {
           1: "var(--chart-1)",
           2: "var(--chart-2)",
@@ -62,6 +64,7 @@ const config: Config = {
       },
     },
   },
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   plugins: [require("tailwindcss-animate")],
 };
 

@@ -4,6 +4,7 @@ import React, { useMemo, useState, useRef, useCallback } from "react";
 import { CompensationRecord, NormalizedLevel } from "@/types";
 import { formatCurrency } from "@/lib/formatters";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 
 const LEVELS: NormalizedLevel[] = [
   NormalizedLevel.INTERN,
@@ -49,9 +50,19 @@ interface TooltipState {
  * Below-market → hsl(210, 20%, 92%) (cool grey-blue)
  * Above-market → hsl(142, 71%, 30%) (deep green)
  */
-export function compToColor(value: number, min: number, max: number): string {
+export function compToColor(value: number, min: number, max: number, isDarkMode?: boolean): string {
   if (min === max) return "hsl(142, 71%, 40%)";
   const ratio = Math.max(0, Math.min(1, (value - min) / (max - min)));
+
+  if (isDarkMode) {
+    // Hue interpolation: 210 → 142
+    const h = Math.round(210 + (142 - 210) * ratio);
+    // Saturation: 15% → 65%
+    const s = Math.round(15 + (65 - 15) * ratio);
+    // Lightness: 20% → 45%
+    const l = Math.round(20 + (45 - 20) * ratio);
+    return `hsl(${h}, ${s}%, ${l}%)`;
+  }
 
   // Hue interpolation: 210 → 142
   const h = Math.round(210 + (142 - 210) * ratio);
@@ -72,6 +83,8 @@ interface CompensationHeatmapProps {
 export function CompensationHeatmap({ data, onCellClick }: CompensationHeatmapProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
+  const { resolvedTheme } = useTheme();
+  const isDarkMode = resolvedTheme === "dark";
 
   const [tooltip, setTooltip] = useState<TooltipState>({
     visible: false,
@@ -260,7 +273,7 @@ export function CompensationHeatmap({ data, onCellClick }: CompensationHeatmapPr
                 );
               }
 
-              const color = compToColor(cell.median, min, max);
+              const color = compToColor(cell.median, min, max, isDarkMode);
               const ratio = (cell.median - min) / (max - min || 1);
               const isDark = ratio > 0.45;
 
@@ -288,7 +301,7 @@ export function CompensationHeatmap({ data, onCellClick }: CompensationHeatmapPr
                     y={CELL_H / 2}
                     dy={4}
                     textAnchor="middle"
-                    fill={isDark ? "rgba(255,255,255,0.95)" : "rgba(0,0,0,0.82)"}
+                    fill={isDarkMode ? "rgba(255,255,255,0.95)" : isDark ? "rgba(255,255,255,0.95)" : "rgba(0,0,0,0.82)"}
                     fontSize={11}
                     fontWeight={700}
                   >
@@ -351,8 +364,9 @@ export function CompensationHeatmap({ data, onCellClick }: CompensationHeatmapPr
         <div
           className="h-2 flex-1 rounded-full"
           style={{
-            background:
-              "linear-gradient(to right, hsl(210,20%,92%), hsl(175,45%,55%), hsl(142,71%,30%))",
+            background: isDarkMode
+              ? "linear-gradient(to right, hsl(210,15%,20%), hsl(175,55%,40%), hsl(142,65%,45%))"
+              : "linear-gradient(to right, hsl(210,20%,92%), hsl(175,45%,55%), hsl(142,71%,30%))",
           }}
         />
         <span className="text-[10px] text-muted-foreground">Above market</span>

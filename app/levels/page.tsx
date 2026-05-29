@@ -23,6 +23,7 @@ import { NormalizedLevel } from "@/types";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
 import { NORMALIZED_LEVELS } from "@/lib/constants";
 import { formatCurrency, getLevelColor } from "@/lib/formatters";
+import { useChartTheme } from "@/lib/hooks/useChartTheme";
 import { cn } from "@/lib/utils";
 import {
   ArrowRight,
@@ -181,10 +182,7 @@ const LEVEL_DETAILS: Record<
   },
 };
 
-const COMP_COLORS = {
-  engineering: "hsl(221, 83%, 60%)",
-  management: "hsl(280, 65%, 60%)",
-};
+
 
 const FAQ_ITEMS = [
   {
@@ -525,6 +523,12 @@ function LadderTooltip({ active, payload, label }: ChartTooltipProps) {
 
 function LadderChart() {
   const router = useRouter();
+  const themeColors = useChartTheme();
+  
+  const compColors = {
+    engineering: themeColors.chart1,
+    management: themeColors.chart5,
+  };
 
   const ladderData = useMemo(() => {
     return LADDER_LEVELS.map((level) => {
@@ -572,8 +576,8 @@ function LadderChart() {
         </div>
         <div className="flex items-center gap-4 text-xs">
           {[
-            { label: "Engineering IC", color: COMP_COLORS.engineering },
-            { label: "Management", color: COMP_COLORS.management },
+            { label: "Engineering IC", color: compColors.engineering },
+            { label: "Management", color: compColors.management },
           ].map(({ label, color }) => (
             <div key={label} className="flex items-center gap-1.5">
               <span
@@ -595,13 +599,13 @@ function LadderChart() {
             <CartesianGrid
               strokeDasharray="3 3"
               vertical={false}
-              stroke="hsl(var(--border))"
+              stroke={themeColors.border}
               opacity={0.5}
             />
             <XAxis
               dataKey="level"
               tickFormatter={(v: string) => LEVEL_SHORT[v] ?? v}
-              stroke="hsl(var(--muted-foreground))"
+              stroke={themeColors.mutedForeground}
               fontSize={11}
               tickLine={false}
               axisLine={false}
@@ -609,7 +613,7 @@ function LadderChart() {
             />
             <YAxis
               tickFormatter={(v: number) => formatCurrency(v, "INR", true)}
-              stroke="hsl(var(--muted-foreground))"
+              stroke={themeColors.mutedForeground}
               fontSize={11}
               tickLine={false}
               axisLine={false}
@@ -621,21 +625,21 @@ function LadderChart() {
             {/* Divergence annotation */}
             <ReferenceLine
               x={NormalizedLevel.STAFF}
-              stroke="hsl(var(--muted-foreground))"
+              stroke={themeColors.mutedForeground}
               strokeDasharray="4 4"
               opacity={0.4}
               label={{
                 value: "Tracks diverge",
                 position: "top",
                 fontSize: 10,
-                fill: "hsl(var(--muted-foreground))",
+                fill: themeColors.mutedForeground,
               }}
             />
 
             <Line
               type="monotone"
               dataKey="Engineering"
-              stroke={COMP_COLORS.engineering}
+              stroke={compColors.engineering}
               strokeWidth={3}
               connectNulls
               dot={(props: Record<string, unknown>) => {
@@ -646,8 +650,8 @@ function LadderChart() {
                     cx={cx}
                     cy={cy}
                     r={6}
-                    fill={COMP_COLORS.engineering}
-                    stroke="white"
+                    fill={compColors.engineering}
+                    stroke={themeColors.background}
                     strokeWidth={2}
                     style={{ cursor: "pointer" }}
                     onClick={() => handleDotClick(payload.level)}
@@ -656,16 +660,16 @@ function LadderChart() {
               }}
               activeDot={{
                 r: 8,
-                stroke: COMP_COLORS.engineering,
+                stroke: compColors.engineering,
                 strokeWidth: 2,
-                fill: "white",
+                fill: themeColors.background,
                 style: { cursor: "pointer" },
               }}
             />
             <Line
               type="monotone"
               dataKey="Management"
-              stroke={COMP_COLORS.management}
+              stroke={compColors.management}
               strokeWidth={2}
               strokeDasharray="6 3"
               connectNulls
@@ -677,15 +681,15 @@ function LadderChart() {
                     cx={cx}
                     cy={cy}
                     r={5}
-                    fill={COMP_COLORS.management}
-                    stroke="white"
+                    fill={compColors.management}
+                    stroke={themeColors.background}
                     strokeWidth={2}
                     style={{ cursor: "pointer" }}
                     onClick={() => handleDotClick(payload.level)}
                   />
                 );
               }}
-              activeDot={{ r: 7, stroke: COMP_COLORS.management, strokeWidth: 2, fill: "white" }}
+              activeDot={{ r: 7, stroke: compColors.management, strokeWidth: 2, fill: themeColors.background }}
             />
           </LineChart>
         </ResponsiveContainer>

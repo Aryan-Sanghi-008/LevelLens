@@ -13,6 +13,8 @@ import {
 } from "recharts";
 import { NormalizedLevel } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useChartTheme } from "@/lib/hooks/useChartTheme";
+import { useTheme } from "next-themes";
 
 export interface LevelDistributionData {
   level: NormalizedLevel;
@@ -52,6 +54,10 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export function LevelDistributionBar({ data, isLoading }: LevelDistributionBarProps) {
+  const theme = useChartTheme();
+  const { resolvedTheme } = useTheme();
+  const isDarkMode = resolvedTheme === "dark";
+
   if (isLoading) return <LevelDistributionBar.Skeleton />;
   if (!data || data.length === 0) return <div className="h-[300px] flex items-center justify-center text-muted-foreground">No distribution data</div>;
 
@@ -62,12 +68,12 @@ export function LevelDistributionBar({ data, isLoading }: LevelDistributionBarPr
           data={data}
           margin={{ top: 10, right: 10, left: -20, bottom: 20 }}
         >
-          <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.border} opacity={0.2} />
           <XAxis 
             dataKey="level" 
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 10, fill: theme.mutedForeground }}
             interval={0}
             angle={-45}
             textAnchor="end"
@@ -75,16 +81,21 @@ export function LevelDistributionBar({ data, isLoading }: LevelDistributionBarPr
           <YAxis 
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 12, fill: theme.mutedForeground }}
           />
           <Tooltip 
             content={<CustomTooltip />} 
-            cursor={{ fill: 'var(--muted)', opacity: 0.4 }} 
+            cursor={{ fill: theme.mutedForeground, opacity: 0.15 }} 
           />
           <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={LEVEL_HEX_COLORS[entry.level] || "#3b82f6"} />
-            ))}
+            {data.map((entry, index) => {
+              const baseColor = LEVEL_HEX_COLORS[entry.level] || "#3b82f6";
+              // Exec defaults to a dark blue-grey that is hard to see on near-black background
+              const fill = entry.level === NormalizedLevel.EXEC && isDarkMode 
+                ? "#cbd5e1" 
+                : baseColor;
+              return <Cell key={`cell-${index}`} fill={fill} />;
+            })}
           </Bar>
         </BarChart>
       </ResponsiveContainer>

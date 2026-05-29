@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Search, BarChart3, Moon, Sun, GitCompare } from "lucide-react";
+import { Search, BarChart3, Moon, Sun, GitCompare, Laptop } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useComparisonStore } from "@/lib/hooks/useComparisonStore";
 import { useSearchStore } from "@/lib/hooks/useSearchStore";
@@ -135,19 +141,29 @@ export function Header() {
           )}
         </Link>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 rounded-md"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        >
-          {mounted && theme === "dark" ? (
-            <Sun className="h-4 w-4" />
-          ) : (
-            <Moon className="h-4 w-4" />
-          )}
-          <span className="sr-only">Toggle theme</span>
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="h-8 w-8 rounded-md hover:bg-accent inline-flex items-center justify-center outline-none">
+            {mounted && theme === "dark" && <Moon className="h-4 w-4 text-muted-foreground hover:text-foreground" />}
+            {mounted && theme === "light" && <Sun className="h-4 w-4 text-muted-foreground hover:text-foreground" />}
+            {mounted && theme === "system" && <Laptop className="h-4 w-4 text-muted-foreground hover:text-foreground" />}
+            {!mounted && <Sun className="h-4 w-4 text-muted-foreground hover:text-foreground" />}
+            <span className="sr-only">Toggle theme</span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[120px] bg-popover text-popover-foreground border border-border p-1 rounded-md shadow-md">
+            <DropdownMenuItem onClick={() => setTheme("light")} className="gap-2 cursor-pointer flex items-center px-2 py-1.5 text-sm rounded hover:bg-accent">
+              <Sun className="h-4 w-4" />
+              <span>Light</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme("dark")} className="gap-2 cursor-pointer flex items-center px-2 py-1.5 text-sm rounded hover:bg-accent">
+              <Moon className="h-4 w-4" />
+              <span>Dark</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme("system")} className="gap-2 cursor-pointer flex items-center px-2 py-1.5 text-sm rounded hover:bg-accent">
+              <Laptop className="h-4 w-4" />
+              <span>System</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

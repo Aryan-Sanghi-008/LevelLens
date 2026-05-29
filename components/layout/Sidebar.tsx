@@ -9,7 +9,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-[260px] flex-col border-r border-border bg-background md:flex shrink-0 min-h-[calc(100vh-56px)] sticky top-14">
+    <aside className="hidden w-[260px] flex-col border-r border-border bg-sidebar md:flex shrink-0 min-h-[calc(100vh-56px)] sticky top-14">
       <nav className="flex-1 space-y-8 p-4 py-6">
         {NAV_DATA.map((section) => (
           <div key={section.title}>

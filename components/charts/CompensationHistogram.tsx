@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { formatCurrency } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useChartTheme } from "@/lib/hooks/useChartTheme";
 
 export interface HistogramData {
   bucketStr: string;
@@ -41,6 +42,8 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export function CompensationHistogram({ data, isLoading }: CompensationHistogramProps) {
+  const theme = useChartTheme();
+
   if (isLoading) return <CompensationHistogram.Skeleton />;
   if (!data || data.length === 0) return <div className="h-[200px] flex items-center justify-center text-muted-foreground">No data available</div>;
 
@@ -56,23 +59,23 @@ export function CompensationHistogram({ data, isLoading }: CompensationHistogram
             dataKey="bucketStr" 
             axisLine={true}
             tickLine={false}
-            tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 10, fill: theme.mutedForeground }}
             interval="preserveStartEnd"
             minTickGap={30}
           />
           <YAxis 
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+            tick={{ fontSize: 10, fill: theme.mutedForeground }}
             allowDecimals={false}
           />
           <Tooltip 
             content={<CustomTooltip />} 
-            cursor={{ fill: 'var(--muted)', opacity: 0.4 }} 
+            cursor={{ fill: theme.mutedForeground, opacity: 0.15 }} 
           />
           <Bar 
             dataKey="count" 
-            fill="hsl(var(--chart-1))" 
+            fill={theme.chart1} 
             radius={[2, 2, 0, 0]} 
           />
         </BarChart>

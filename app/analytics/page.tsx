@@ -22,6 +22,7 @@ import {
 import { formatCurrency } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
 import { Lightbulb, TrendingUp, Award, Layers, GitBranch } from "lucide-react";
+import { useChartTheme } from "@/lib/hooks/useChartTheme";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -45,20 +46,7 @@ const LEVEL_LABELS: Record<string, string> = {
   DIRECTOR: "Director",
 };
 
-const CHART_COLORS = [
-  "hsl(221, 83%, 60%)",
-  "hsl(142, 71%, 45%)",
-  "hsl(27, 96%, 61%)",
-  "hsl(280, 65%, 60%)",
-  "hsl(339, 90%, 60%)",
-];
 
-const ROLE_COLORS: Record<string, string> = {
-  Engineering: "hsl(221, 83%, 60%)",
-  Product: "hsl(27, 96%, 61%)",
-  Data: "hsl(142, 71%, 45%)",
-  Design: "hsl(280, 65%, 60%)",
-};
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
@@ -166,6 +154,22 @@ const INSIGHT_COLORS: Record<string, string> = {
 
 export default function AnalyticsPage() {
   const [activeLevel, setActiveLevel] = useState<NormalizedLevel>(NormalizedLevel.SENIOR);
+  const themeColors = useChartTheme();
+
+  const chartColors = [
+    themeColors.chart1,
+    themeColors.chart2,
+    themeColors.chart3,
+    themeColors.chart4,
+    themeColors.chart5,
+  ];
+
+  const roleColors = {
+    Engineering: themeColors.chart1,
+    Product: themeColors.chart3,
+    Data: themeColors.chart2,
+    Design: themeColors.chart5,
+  };
 
   // ── Top Paying Companies chart data ──
   const topPayingData = useMemo(() => {
@@ -309,13 +313,13 @@ export default function AnalyticsPage() {
                       strokeDasharray="3 3"
                       horizontal={false}
                       vertical={true}
-                      stroke="hsl(var(--border))"
+                      stroke={themeColors.border}
                       opacity={0.5}
                     />
                     <XAxis
                       type="number"
                       tickFormatter={(v: number) => formatCurrency(v, "INR", true)}
-                      stroke="hsl(var(--muted-foreground))"
+                      stroke={themeColors.mutedForeground}
                       fontSize={10}
                       tickLine={false}
                       axisLine={false}
@@ -323,19 +327,19 @@ export default function AnalyticsPage() {
                     <YAxis
                       type="category"
                       dataKey="name"
-                      stroke="hsl(var(--muted-foreground))"
+                      stroke={themeColors.mutedForeground}
                       fontSize={12}
                       tickLine={false}
                       axisLine={false}
                       width={82}
                     />
                     <RechartsTooltip
-                      cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
+                      cursor={{ fill: themeColors.mutedForeground, opacity: 0.15 }}
                       content={<BarTooltip />}
                     />
                     <Bar dataKey="median" radius={[0, 6, 6, 0]} maxBarSize={36}>
                       {topPayingData.map((entry, index) => (
-                        <Cell key={`cell-${entry.slug}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                        <Cell key={`cell-${entry.slug}`} fill={chartColors[index % chartColors.length]} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -361,13 +365,13 @@ export default function AnalyticsPage() {
                   <CartesianGrid
                     strokeDasharray="3 3"
                     vertical={false}
-                    stroke="hsl(var(--border))"
+                    stroke={themeColors.border}
                     opacity={0.5}
                   />
                   <XAxis
                     dataKey="level"
                     tickFormatter={(v: string) => LEVEL_LABELS[v] ?? v}
-                    stroke="hsl(var(--muted-foreground))"
+                    stroke={themeColors.mutedForeground}
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
@@ -375,7 +379,7 @@ export default function AnalyticsPage() {
                   />
                   <YAxis
                     tickFormatter={(v: number) => formatCurrency(v, "INR", true)}
-                    stroke="hsl(var(--muted-foreground))"
+                    stroke={themeColors.mutedForeground}
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
@@ -391,47 +395,47 @@ export default function AnalyticsPage() {
                   {/* Reference line at market median */}
                   <ReferenceLine
                     y={summaryStats.marketMedian}
-                    stroke="hsl(var(--muted-foreground))"
+                    stroke={themeColors.mutedForeground}
                     strokeDasharray="4 4"
                     opacity={0.4}
                     label={{
                       value: "All-co median",
                       position: "insideTopRight",
                       fontSize: 10,
-                      fill: "hsl(var(--muted-foreground))",
+                      fill: themeColors.mutedForeground,
                     }}
                   />
                   <Line
                     type="monotone"
                     dataKey="Engineering"
-                    stroke={ROLE_COLORS.Engineering}
+                    stroke={roleColors.Engineering}
                     strokeWidth={3}
-                    dot={{ r: 4, fill: ROLE_COLORS.Engineering }}
+                    dot={{ r: 4, fill: roleColors.Engineering }}
                     activeDot={{ r: 6 }}
                     connectNulls
                   />
                   <Line
                     type="monotone"
                     dataKey="Product"
-                    stroke={ROLE_COLORS.Product}
+                    stroke={roleColors.Product}
                     strokeWidth={2}
-                    dot={{ r: 3, fill: ROLE_COLORS.Product }}
+                    dot={{ r: 3, fill: roleColors.Product }}
                     connectNulls
                   />
                   <Line
                     type="monotone"
                     dataKey="Data"
-                    stroke={ROLE_COLORS.Data}
+                    stroke={roleColors.Data}
                     strokeWidth={2}
-                    dot={{ r: 3, fill: ROLE_COLORS.Data }}
+                    dot={{ r: 3, fill: roleColors.Data }}
                     connectNulls
                   />
                   <Line
                     type="monotone"
                     dataKey="Design"
-                    stroke={ROLE_COLORS.Design}
+                    stroke={roleColors.Design}
                     strokeWidth={2}
-                    dot={{ r: 3, fill: ROLE_COLORS.Design }}
+                    dot={{ r: 3, fill: roleColors.Design }}
                     connectNulls
                   />
                 </LineChart>
