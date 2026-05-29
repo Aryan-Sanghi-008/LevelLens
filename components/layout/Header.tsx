@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useComparisonStore } from "@/lib/hooks/useComparisonStore";
+import { useSearchStore } from "@/lib/hooks/useSearchStore";
 import { useEffect, useState } from "react";
 
 export function Header() {
   const { setTheme, theme } = useTheme();
   const comparisonCount = useComparisonStore((state) => state.slots.length);
+  const setOpen = useSearchStore((state) => state.setOpen);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -33,13 +35,15 @@ export function Header() {
           <Input
             type="search"
             placeholder="Search role, company, or level..."
-            className="h-9 w-full rounded-md bg-muted/50 pl-9 pr-12 focus-visible:bg-background"
+            className="h-9 w-full rounded-md bg-muted/50 pl-9 pr-12 focus-visible:bg-background cursor-pointer"
+            onClick={() => setOpen(true)}
+            readOnly
           />
           <div className="absolute right-1.5 flex h-5 items-center rounded border border-border bg-background px-1.5 text-[10px] font-medium text-muted-foreground">
             <span className="text-xs">⌘</span>K
           </div>
         </div>
-        <Button variant="ghost" size="icon" className="md:hidden flex ml-auto">
+        <Button variant="ghost" size="icon" className="md:hidden flex ml-auto" onClick={() => setOpen(true)}>
           <Search className="h-5 w-5 text-muted-foreground" />
         </Button>
       </div>

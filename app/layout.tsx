@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { CommandSearch } from "@/components/shared/CommandSearch";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -44,6 +45,7 @@ export default function RootLayout({
                   </main>
                 </div>
               </div>
+              <CommandSearch />
               <Toaster richColors closeButton />
             </TooltipProvider>
           </ThemeProvider>
