@@ -2,6 +2,9 @@ import { CompensationBreakdown, CompensationRecord, NormalizedLevel } from "@/ty
 import { CURRENCIES } from "./constants";
 
 export function formatCurrency(amount: number, currency: string, compact: boolean = false): string {
+  if (amount === undefined || amount === null || amount < 0 || isNaN(amount)) {
+    return "N/A";
+  }
   const isINR = currency === "INR";
   
   if (compact) {
@@ -54,8 +57,12 @@ export function formatCTC(record: CompensationRecord): CompensationBreakdown {
 export function convertCurrency(amount: number, from: string, to: string): number {
   if (from === to) return amount;
   
-  const fromRate = CURRENCIES.find((c) => c.code === from)?.rateToUSD || 1;
-  const toRate = CURRENCIES.find((c) => c.code === to)?.rateToUSD || 1;
+  const fromRate = CURRENCIES.find((c) => c.code === from)?.rateToUSD;
+  const toRate = CURRENCIES.find((c) => c.code === to)?.rateToUSD;
+  
+  if (fromRate === undefined || toRate === undefined) {
+    return -1;
+  }
   
   // Convert to USD first, then to target currency
   const amountInUSD = amount * fromRate;

@@ -30,6 +30,26 @@ interface SalaryDetailDrawerProps {
 
 export function SalaryDetailDrawer({ record, isOpen, onClose }: SalaryDetailDrawerProps) {
   const addToComparison = useComparisonStore((state) => state.addToComparison);
+  const [viewportHeight, setViewportHeight] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !window.visualViewport) return;
+
+    const handleResize = () => {
+      if (window.visualViewport) {
+        setViewportHeight(window.visualViewport.height);
+      }
+    };
+
+    window.visualViewport.addEventListener("resize", handleResize);
+    window.visualViewport.addEventListener("scroll", handleResize);
+    handleResize();
+
+    return () => {
+      window.visualViewport?.removeEventListener("resize", handleResize);
+      window.visualViewport?.removeEventListener("scroll", handleResize);
+    };
+  }, [isOpen]);
 
   const { percentile, allLevelStats, companyLevelStats, similarRecords, allSameLevel, companySameLevel } = useMemo(() => {
     if (!record) return { percentile: 50, allLevelStats: null, companyLevelStats: null, similarRecords: [], allSameLevel: [], companySameLevel: [] };
@@ -100,7 +120,10 @@ export function SalaryDetailDrawer({ record, isOpen, onClose }: SalaryDetailDraw
     <DialogPrimitive.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0" />
-        <DialogPrimitive.Popup className="fixed inset-y-0 right-0 z-50 w-full md:w-[450px] bg-background shadow-2xl outline-none data-open:animate-in data-closed:animate-out data-closed:slide-out-to-right data-open:slide-in-from-right duration-300 border-l overflow-hidden flex flex-col">
+        <DialogPrimitive.Popup 
+          className="fixed inset-y-0 right-0 z-50 w-full md:w-[450px] bg-background shadow-2xl outline-none data-open:animate-in data-closed:animate-out data-closed:slide-out-to-right data-open:slide-in-from-right duration-300 border-l overflow-hidden flex flex-col"
+          style={viewportHeight ? { height: `${viewportHeight}px`, bottom: "auto" } : undefined}
+        >
           
           <div className="flex items-center justify-between p-4 border-b bg-card shrink-0">
             <h2 className="font-semibold text-base">Compensation Record</h2>

@@ -75,17 +75,25 @@ export function CompanyCard({ profile, className }: CompanyCardProps) {
             </div>
           </div>
           
-          <div className="mt-4 space-y-1.5">
-            <div className="flex justify-between text-[10px] text-muted-foreground">
-              <span>{formatCurrency(p25Total, "INR", true)} (25th)</span>
-              <span>{formatCurrency(p75Total, "INR", true)} (75th)</span>
-            </div>
-            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden relative">
-              <div 
-                className="absolute top-0 h-full bg-foreground/30 group-hover:bg-brand-primary/60 transition-colors rounded-full"
-                style={{ left: `${p25Pct}%`, width: `${widthPct}%` }}
-              />
-            </div>
+          <div className="mt-4 min-h-[30px] flex items-center justify-center">
+            {dataPointCount === 1 ? (
+              <span className="text-[11px] text-muted-foreground/80 italic font-medium">
+                Based on 1 self-reported report
+              </span>
+            ) : (
+              <div className="w-full space-y-1.5">
+                <div className="flex justify-between text-[10px] text-muted-foreground">
+                  <span>{formatCurrency(p25Total, "INR", true)} (25th)</span>
+                  <span>{formatCurrency(p75Total, "INR", true)} (75th)</span>
+                </div>
+                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden relative">
+                  <div 
+                    className="absolute top-0 h-full bg-foreground/30 group-hover:bg-brand-primary/60 transition-colors rounded-full"
+                    style={{ left: `${p25Pct}%`, width: `${widthPct}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
 

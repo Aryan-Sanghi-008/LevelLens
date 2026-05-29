@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { ComparisonSlot } from '@/types';
+import { toast } from 'sonner';
 
 interface ComparisonStore {
   slots: ComparisonSlot[];
@@ -20,7 +21,10 @@ export const useComparisonStore = create<ComparisonStore>((set, get) => ({
     const isDuplicate = currentSlots.some(
       s => s.companyId === slot.companyId && s.level === slot.level && s.role === slot.role
     );
-    if (isDuplicate) return;
+    if (isDuplicate) {
+      toast.warning("You're comparing the same role — try selecting different companies or levels");
+      return;
+    }
 
     set({ slots: [...currentSlots, slot] });
   },

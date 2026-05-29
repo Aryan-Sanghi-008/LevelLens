@@ -27,12 +27,15 @@ export function CompensationBreakdown({ record, className }: CompensationBreakdo
   const bonusPct = total > 0 ? (record.bonus / total) * 100 : 0;
 
   // Calculate percentiles against MOCK_SALARIES for the same role and level
-  const { p25, p50, p75, userPercentile } = useMemo(() => {
+  const { p25, p50, p75, userPercentile, cohortSize } = useMemo(() => {
     const dataset = MOCK_SALARIES
       .filter(s => s.role === record.role && s.normalizedLevel === record.normalizedLevel)
       .map(s => s.totalCompensation);
     
-    return getPercentileBand(record.totalCompensation, dataset);
+    return {
+      ...getPercentileBand(record.totalCompensation, dataset),
+      cohortSize: dataset.length,
+    };
   }, [record.role, record.normalizedLevel, record.totalCompensation]);
 
   // Percentile Badge styling
@@ -74,7 +77,7 @@ export function CompensationBreakdown({ record, className }: CompensationBreakdo
           </div>
         </div>
         
-        {p50 > 0 && (
+        {p50 > 0 && cohortSize > 1 && (
           <Badge variant={badgeVariant} className={cn("px-2 py-0.5", badgeColor)}>
             {badgeText}
           </Badge>
@@ -160,36 +163,43 @@ export function CompensationBreakdown({ record, className }: CompensationBreakdo
             <span className="text-xs font-medium">vs Market ({record.normalizedLevel} {record.role})</span>
           </div>
           
-          <div className="relative h-6 w-full pt-2">
-            {/* Background Line */}
-            <div className="absolute top-1/2 left-0 h-1 w-full -translate-y-1/2 rounded-full bg-muted" />
-            
-            {/* Market Range (p25 to p75) */}
-            <div 
-              className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted-foreground/30"
-              style={{ left: `${p25PosPct}%`, width: `${p75PosPct - p25PosPct}%` }}
-            />
-            
-            {/* Median Marker */}
-            <div 
-              className="absolute top-1/2 h-3 w-0.5 -translate-y-1/2 bg-muted-foreground"
-              style={{ left: `${p50PosPct}%` }}
-            />
+          {cohortSize === 1 ? (
+            <div className="flex flex-col items-center justify-center text-center p-3 rounded-lg bg-muted/20 border border-border/55 select-none">
+              <span className="text-xs font-semibold text-muted-foreground">Market comparison unavailable</span>
+              <span className="text-[11px] text-muted-foreground/80 mt-0.5">Based on 1 self-reported report</span>
+            </div>
+          ) : (
+            <div className="relative h-6 w-full pt-2">
+              {/* Background Line */}
+              <div className="absolute top-1/2 left-0 h-1 w-full -translate-y-1/2 rounded-full bg-muted" />
+              
+              {/* Market Range (p25 to p75) */}
+              <div 
+                className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-muted-foreground/30"
+                style={{ left: `${p25PosPct}%`, width: `${p75PosPct - p25PosPct}%` }}
+              />
+              
+              {/* Median Marker */}
+              <div 
+                className="absolute top-1/2 h-3 w-0.5 -translate-y-1/2 bg-muted-foreground"
+                style={{ left: `${p50PosPct}%` }}
+              />
 
-            {/* User Position Dot */}
-            <div 
-              className="absolute top-1/2 size-3 -translate-y-1/2 -translate-x-1/2 rounded-full border-2 border-background bg-foreground shadow-sm"
-              style={{ left: `${Math.min(userPosPct, 100)}%` }}
-            />
-            
-            {/* Labels */}
-            <div className="absolute top-full mt-1 -translate-x-1/2 text-[10px] text-muted-foreground" style={{ left: `${p50PosPct}%` }}>
-              Median
+              {/* User Position Dot */}
+              <div 
+                className="absolute top-1/2 size-3 -translate-y-1/2 -translate-x-1/2 rounded-full border-2 border-background bg-foreground shadow-sm"
+                style={{ left: `${Math.min(userPosPct, 100)}%` }}
+              />
+              
+              {/* Labels */}
+              <div className="absolute top-full mt-1 -translate-x-1/2 text-[10px] text-muted-foreground" style={{ left: `${p50PosPct}%` }}>
+                Median
+              </div>
+              <div className="absolute top-full mt-1 -translate-x-1/2 text-[10px] font-medium" style={{ left: `${Math.min(userPosPct, 100)}%` }}>
+                You
+              </div>
             </div>
-            <div className="absolute top-full mt-1 -translate-x-1/2 text-[10px] font-medium" style={{ left: `${Math.min(userPosPct, 100)}%` }}>
-              You
-            </div>
-          </div>
+          )}
         </div>
       )}
     </div>

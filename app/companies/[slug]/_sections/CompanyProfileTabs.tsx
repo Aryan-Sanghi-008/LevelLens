@@ -146,7 +146,27 @@ export function CompanyProfileTabs({
             <tbody className="divide-y divide-border">
               {filteredLevelsList.map((level) => {
                 const comp = levelCompensation[level];
-                if (!comp || comp.count === 0) return null;
+                const hasData = comp && comp.count > 0;
+
+                if (!hasData) {
+                  return (
+                    <tr key={level} className="hover:bg-muted/30 transition-colors opacity-70">
+                      <td className="px-6 py-4">
+                        <Badge
+                          variant={getLevelBadgeVariant(level)}
+                          className={cn("px-1.5 py-0 text-[10px] opacity-60", getLevelColor(level))}
+                        >
+                          {level}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground/60 italic">No data</td>
+                      <td className="px-6 py-4 text-muted-foreground/60 italic">No data</td>
+                      <td className="px-6 py-4 text-muted-foreground/60 italic">No data</td>
+                      <td className="px-6 py-4 text-muted-foreground/60 italic font-medium">No data</td>
+                      <td className="px-6 py-4 text-muted-foreground/60 italic text-xs font-medium">No data</td>
+                    </tr>
+                  );
+                }
 
                 const globalMedian = globalMedians[level] || 1;
                 const diffRatio = comp.total / globalMedian;

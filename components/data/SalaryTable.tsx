@@ -35,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import {
@@ -249,7 +250,14 @@ export function SalaryTable({
                 className="h-8 w-8 rounded-md bg-muted object-cover shrink-0"
               />
               <div className="flex flex-col min-w-0">
-                <span className="font-semibold text-sm truncate">{company.name}</span>
+                <Tooltip>
+                  <TooltipTrigger render={
+                    <span className="font-semibold text-sm truncate cursor-help">{company.name}</span>
+                  } />
+                  <TooltipContent>
+                    <p className="text-xs">{company.name}</p>
+                  </TooltipContent>
+                </Tooltip>
                 {company.industry && (
                   <span className="text-[11px] text-muted-foreground truncate">
                     {company.industry}
@@ -267,9 +275,16 @@ export function SalaryTable({
         cell: ({ row }) => {
           const level = row.original.normalizedLevel;
           return (
-            <div className="flex flex-col items-start gap-0.5">
-              <span className="font-medium text-sm">{row.original.role}</span>
-              <div className="flex items-center gap-1.5">
+            <div className="flex flex-col items-start gap-0.5 min-w-0 w-full">
+              <Tooltip>
+                <TooltipTrigger render={
+                  <span className="font-medium text-sm truncate cursor-help w-full">{row.original.role}</span>
+                } />
+                <TooltipContent>
+                  <p className="text-xs">{row.original.role}</p>
+                </TooltipContent>
+              </Tooltip>
+              <div className="flex items-center gap-1.5 min-w-0 w-full">
                 <span
                   className="text-xs text-muted-foreground truncate max-w-[110px]"
                   title={row.original.rawTitle}

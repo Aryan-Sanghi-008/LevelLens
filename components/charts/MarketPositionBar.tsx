@@ -38,6 +38,18 @@ export function MarketPositionBar({ record, cohort, cohortLabel = "this cohort" 
     };
   }, [cohort, record]);
 
+  if (cohort && cohort.length === 1) {
+    return (
+      <div className="w-full flex flex-col gap-2 py-2 select-none">
+        <div className="flex justify-between items-baseline">
+          <span className="text-sm text-muted-foreground">Compensation for {cohortLabel}</span>
+          <span className="text-lg font-bold">{formatCurrency(record.totalCompensation, record.currency, true)}</span>
+        </div>
+        <p className="text-xs text-muted-foreground text-center mt-1">Based on 1 self-reported report</p>
+      </div>
+    );
+  }
+
   if (!stats || !stats.min || stats.max === stats.min) return null;
 
   const { min, max, p25, median, p75, topPct } = stats;
