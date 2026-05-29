@@ -10,6 +10,7 @@ import { PercentileGauge } from "@/components/charts/PercentileGauge";
 import { StackedBarBreakdown } from "@/components/charts/StackedBarBreakdown";
 import { formatCurrency } from "@/lib/formatters";
 import { getLevelBadgeVariant } from "@/lib/formatters";
+import { MarketPositionBar } from "@/components/charts/MarketPositionBar";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
 import { useComparisonStore } from "@/lib/hooks/useComparisonStore";
 import Image from "next/image";
@@ -30,8 +31,8 @@ interface SalaryDetailDrawerProps {
 export function SalaryDetailDrawer({ record, isOpen, onClose }: SalaryDetailDrawerProps) {
   const addToComparison = useComparisonStore((state) => state.addToComparison);
 
-  const { percentile, allLevelStats, companyLevelStats, similarRecords } = useMemo(() => {
-    if (!record) return { percentile: 50, allLevelStats: null, companyLevelStats: null, similarRecords: [] };
+  const { percentile, allLevelStats, companyLevelStats, similarRecords, allSameLevel, companySameLevel } = useMemo(() => {
+    if (!record) return { percentile: 50, allLevelStats: null, companyLevelStats: null, similarRecords: [], allSameLevel: [], companySameLevel: [] };
 
     const allSameLevel = MOCK_SALARIES.filter(r => r.normalizedLevel === record.normalizedLevel);
     const sortedAll = [...allSameLevel].sort((a, b) => a.totalCompensation - b.totalCompensation);
@@ -63,7 +64,9 @@ export function SalaryDetailDrawer({ record, isOpen, onClose }: SalaryDetailDraw
       percentile: pct,
       allLevelStats: getPercentiles(sortedAll),
       companyLevelStats: getPercentiles([...companySameLevel].sort((a, b) => a.totalCompensation - b.totalCompensation)),
-      similarRecords: similar
+      similarRecords: similar,
+      allSameLevel,
+      companySameLevel
     };
   }, [record]);
 
@@ -191,43 +194,21 @@ export function SalaryDetailDrawer({ record, isOpen, onClose }: SalaryDetailDraw
               <div className="space-y-3">
                 {allLevelStats && (
                   <div className="p-4 rounded-xl border bg-card text-sm">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-semibold text-muted-foreground">vs. all {record.normalizedLevel}s</span>
-                      <Badge variant="outline" className="text-[10px]">Global</Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-muted-foreground">p25</span>
-                      <span className="font-bold">{formatCurrency(allLevelStats.p25, "INR", true)}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-muted-foreground">Median</span>
-                      <span className="font-bold text-brand-primary">{formatCurrency(allLevelStats.median, "INR", true)}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">p75</span>
-                      <span className="font-bold">{formatCurrency(allLevelStats.p75, "INR", true)}</span>
-                    </div>
+                    <MarketPositionBar 
+                      record={record} 
+                      cohort={allSameLevel} 
+                      cohortLabel={`all ${record.normalizedLevel}s`} 
+                    />
                   </div>
                 )}
 
                 {companyLevelStats && (
-                  <div className="p-4 rounded-xl border bg-card text-sm">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-semibold text-muted-foreground">vs. {record.company.name} {record.normalizedLevel}s</span>
-                      <Badge variant="outline" className="text-[10px]">Internal</Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-muted-foreground">p25</span>
-                      <span className="font-bold">{formatCurrency(companyLevelStats.p25, "INR", true)}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-muted-foreground">Median</span>
-                      <span className="font-bold text-brand-primary">{formatCurrency(companyLevelStats.median, "INR", true)}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">p75</span>
-                      <span className="font-bold">{formatCurrency(companyLevelStats.p75, "INR", true)}</span>
-                    </div>
+                  <div className="p-4 rounded-xl border bg-card text-sm mt-3">
+                    <MarketPositionBar 
+                      record={record} 
+                      cohort={companySameLevel} 
+                      cohortLabel={`${record.company.name} ${record.normalizedLevel}s`} 
+                    />
                   </div>
                 )}
               </div>

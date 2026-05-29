@@ -6,7 +6,9 @@ import { SalaryTable } from "@/components/data/SalaryTable";
 import { FilterPanel } from "@/components/data/FilterPanel";
 import { LocationAdjuster } from "@/components/data/LocationAdjuster";
 import { LocationHeatmap } from "@/components/charts/LocationHeatmap";
+import { PercentileChart } from "@/components/charts/PercentileChart";
 import { useFilteredSalaries } from "@/lib/hooks/useFilteredSalaries";
+import { formatCurrency } from "@/lib/formatters";
 import { SortState, FilterState } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,12 +26,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 function HomeContent() {
   const [filters] = useQueryStates(filterParsers);
   const [sort] = useState<SortState>({ field: "totalCompensation", direction: "desc" });
 
   const { data } = useFilteredSalaries(filters as Partial<FilterState>, sort);
+
+  const filteredMedian = React.useMemo(() => {
+    if (!data || data.length === 0) return 0;
+    const sorted = [...data].sort((a, b) => a.totalCompensation - b.totalCompensation);
+    return sorted[Math.floor(sorted.length / 2)].totalCompensation;
+  }, [data]);
 
   const getActiveFiltersCount = () => {
     let count = 0;
@@ -136,7 +145,33 @@ function HomeContent() {
         </div>
 
         {/* Main Table Area */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex flex-col gap-4">
+          
+          {/* Stats Header */}
+          <div className="flex flex-wrap items-center justify-between bg-card border rounded-lg p-3 px-4 shadow-sm gap-2">
+            <div className="text-sm font-medium text-muted-foreground flex flex-wrap items-center gap-2">
+              <span className="font-bold text-foreground">{data.length}</span> data points
+              <span className="hidden sm:inline">&middot;</span>
+              Median <span className="font-bold text-foreground">{formatCurrency(filteredMedian, (filters.currency as string) || "USD", true)}</span>
+              <span className="hidden sm:inline">&middot;</span>
+              <span>Updated 3 days ago</span>
+            </div>
+          </div>
+
+          {/* Distribution Panel */}
+          {data.length > 5 && (
+            <Accordion className="w-full">
+              <AccordionItem value="distribution" className="border rounded-lg bg-card shadow-sm px-4 data-[state=open]:pb-4 border-b-0">
+                <AccordionTrigger className="hover:no-underline py-3 text-sm font-semibold">
+                  Distribution Shape
+                </AccordionTrigger>
+                <AccordionContent>
+                  <PercentileChart data={data} />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
+
           <SalaryTable data={data} isLoading={false} />
         </div>
       </div>
