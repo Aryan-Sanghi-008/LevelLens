@@ -1,28 +1,10 @@
 import React, { Suspense } from "react";
-import { CompanyLogo } from "@/components/shared/CompanyLogo";
-import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
 import { MOCK_COMPANIES } from "@/lib/data/mock/companies";
-import { slugify, formatCurrency } from "@/lib/formatters";
-import {
-  LevelLadderSkeleton,
-  SalaryTableSkeleton,
-  CompanyListSkeleton,
-} from "@/components/shared/Skeletons";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Briefcase, Building2, Calendar, Users } from "lucide-react";
-
-const LevelLadder = dynamic(
-  () => import("@/components/charts/LevelLadder").then((m) => m.LevelLadder),
-  { loading: () => <LevelLadderSkeleton /> }
-);
-
-const SalaryTable = dynamic(
-  () => import("@/components/data/SalaryTable").then((m) => m.SalaryTable),
-  { loading: () => <SalaryTableSkeleton /> }
-);
+import { slugify } from "@/lib/formatters";
+import { roleProfileSearchParamsCache } from "@/lib/searchParams";
+import { RolePageContent } from "./RolePageContent";
 
 export async function generateStaticParams() {
   const roles = new Set(MOCK_SALARIES.map((s) => s.role));
@@ -31,7 +13,13 @@ export async function generateStaticParams() {
   }));
 }
 
-export default function RolePage({ params }: { params: { role: string } }) {
+export default function RolePage({
+  params,
+  searchParams,
+}: {
+  params: { role: string };
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
   const { role: slug } = params;
 
   const matchingRoleRecord = MOCK_SALARIES.find((s) => slugify(s.role) === slug);
@@ -60,188 +48,31 @@ export default function RolePage({ params }: { params: { role: string } }) {
       const meta = MOCK_COMPANIES.find((c) => c.slug === cSlug);
       return { meta, median, count: comps.length };
     })
-    .filter((c) => c.meta)
+    .filter((c): c is { meta: typeof MOCK_COMPANIES[number]; median: number; count: number } => !!c.meta)
     .sort((a, b) => b.median - a.median)
     .slice(0, 5);
 
   const overallTopCompany = topCompanies[0]?.meta?.name || "N/A";
+  const { company } = roleProfileSearchParamsCache.parse(searchParams);
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full">
-      <div className="flex flex-col gap-2 border-b border-border pb-6">
-        <div className="flex items-center gap-3 text-muted-foreground mb-2">
-          <Briefcase className="size-5" />
-          <span className="text-sm font-medium tracking-wide uppercase">Role Insights</span>
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-primary" />
         </div>
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
-          {roleName}
-        </h1>
-        <p className="text-muted-foreground">
-          Compensation benchmarking and career progression ladder.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Data Points</CardTitle>
-            <Users className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalRecords}</div>
-            <p className="text-xs text-muted-foreground mt-1">Verified compensation records</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Top Paying Company
-            </CardTitle>
-            <Building2 className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{overallTopCompany}</div>
-            <p className="text-xs text-muted-foreground mt-1">Highest median across all levels</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Date Range</CardTitle>
-            <Calendar className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {minDate.getFullYear()} - {maxDate.getFullYear()}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Dataset recency</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 mt-4">
-        <div className="flex flex-col gap-6 order-1 lg:order-none">
-          <Tabs defaultValue="ladder" className="w-full">
-            <TabsList className="flex w-full h-auto overflow-x-auto justify-start gap-1 mb-6 p-1 lg:grid lg:grid-cols-3 lg:overflow-visible">
-              <TabsTrigger value="ladder" className="shrink-0">
-                Level Ladder
-              </TabsTrigger>
-              <TabsTrigger value="table" className="shrink-0">
-                Salary Table
-              </TabsTrigger>
-              <TabsTrigger value="companies" className="shrink-0">
-                Companies
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent
-              value="ladder"
-              className="bg-card border border-border rounded-xl p-4 md:p-6 shadow-sm overflow-x-auto"
-            >
-              <div className="mb-6">
-                <h2 className="text-xl font-bold">Career Progression</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Median total compensation (INR) by level across the industry.
-                </p>
-              </div>
-              <Suspense fallback={<LevelLadderSkeleton />}>
-                <LevelLadder records={records} />
-              </Suspense>
-            </TabsContent>
-
-            <TabsContent value="table">
-              <div className="bg-card border border-border rounded-xl p-4 md:p-6 shadow-sm">
-                <div className="mb-6">
-                  <h2 className="text-xl font-bold">Raw Data</h2>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    All compensation records for {roleName}.
-                  </p>
-                </div>
-                <Suspense fallback={<SalaryTableSkeleton />}>
-                  <SalaryTable data={records} />
-                </Suspense>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="companies">
-              <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-                <div className="mb-6">
-                  <h2 className="text-xl font-bold">Top Companies</h2>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Highest paying companies for this role.
-                  </p>
-                </div>
-                <Suspense fallback={<CompanyListSkeleton count={5} />}>
-                  <div className="space-y-4">
-                    {topCompanies.map((c, i) => (
-                      <div
-                        key={c.meta!.slug}
-                        className="flex items-center justify-between p-4 border border-border/50 rounded-lg"
-                      >
-                        <div className="flex items-center gap-4">
-                          <span className="text-muted-foreground font-medium w-4">{i + 1}</span>
-                          <CompanyLogo
-                            src={c.meta!.logo}
-                            name={c.meta!.name}
-                            alt={c.meta!.name || "Company"}
-                            width={32}
-                            height={32}
-                            className="size-8 rounded-md object-cover"
-                          />
-                          <div>
-                            <h4 className="font-semibold">{c.meta!.name}</h4>
-                            <p className="text-xs text-muted-foreground">{c.count} records</p>
-                          </div>
-                        </div>
-                        <div className="text-lg font-bold">
-                          {formatCurrency(c.median, "INR", true)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Suspense>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        <div className="flex flex-col gap-6 order-2 lg:order-none">
-          <Card>
-            <CardHeader>
-              <CardTitle>Top Paying</CardTitle>
-              <CardDescription>
-                Highest median compensation for {roleName}s
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {topCompanies.map((c) => (
-                  <div key={c.meta!.slug} className="flex items-center gap-3">
-                    <CompanyLogo
-                      src={c.meta!.logo}
-                      name={c.meta!.name}
-                      alt={c.meta!.name || "Company"}
-                      width={24}
-                      height={24}
-                      className="size-6 rounded-md object-cover"
-                    />
-                    <div className="flex-1 flex flex-col min-w-0">
-                      <span className="text-sm font-medium truncate">{c.meta!.name}</span>
-                      <span className="text-[10px] text-muted-foreground">
-                        {c.count} points
-                      </span>
-                    </div>
-                    <span className="text-sm font-semibold">
-                      {formatCurrency(c.median, "INR", true)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      }>
+        <RolePageContent
+          roleName={roleName}
+          records={records}
+          totalRecords={totalRecords}
+          overallTopCompany={overallTopCompany}
+          minYear={minDate.getFullYear()}
+          maxYear={maxDate.getFullYear()}
+          topCompanies={topCompanies}
+          initialCompany={company}
+        />
+      </Suspense>
     </div>
   );
 }

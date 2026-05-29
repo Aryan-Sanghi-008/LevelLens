@@ -58,7 +58,7 @@ export interface FilterState {
   roles: string[];
   companies: string[];
   levels: NormalizedLevel[];
-  locations: string[];
+  location: string[];
   minComp?: number;
   maxComp?: number;
   minYoe?: number;

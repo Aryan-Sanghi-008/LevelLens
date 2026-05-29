@@ -5,6 +5,7 @@ import { getCompanyProfile } from "@/lib/data/companyStats";
 import { CompanyProfileSkeleton, ChartSkeleton } from "@/components/shared/Skeletons";
 import { CompanyProfileHero } from "./_sections/CompanyProfileHero";
 import { CompanyProfileTabs } from "./_sections/CompanyProfileTabs";
+import { companyProfileSearchParamsCache } from "@/lib/searchParams";
 
 export async function generateStaticParams() {
   return MOCK_COMPANIES.map((company) => ({
@@ -12,12 +13,20 @@ export async function generateStaticParams() {
   }));
 }
 
-export default function CompanyProfilePage({ params }: { params: { slug: string } }) {
+export default function CompanyProfilePage({
+  params,
+  searchParams,
+}: {
+  params: { slug: string };
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
   const { slug } = params;
 
   if (!getCompanyProfile(slug)) {
     notFound();
   }
+
+  const { tab, level } = companyProfileSearchParamsCache.parse(searchParams);
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full">
@@ -26,7 +35,7 @@ export default function CompanyProfilePage({ params }: { params: { slug: string 
       </Suspense>
 
       <Suspense fallback={<ChartSkeleton className="h-64" />}>
-        <CompanyProfileTabs slug={slug} />
+        <CompanyProfileTabs slug={slug} initialTab={tab} initialLevel={level} />
       </Suspense>
     </div>
   );

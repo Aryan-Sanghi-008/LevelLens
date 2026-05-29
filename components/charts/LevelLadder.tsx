@@ -14,9 +14,10 @@ import { LevelLadderSkeleton } from "@/components/shared/Skeletons";
 
 interface LevelLadderProps {
   records: CompensationRecord[];
+  selectedCompanySlug?: string;
 }
 
-export function LevelLadder({ records }: LevelLadderProps) {
+export function LevelLadder({ records, selectedCompanySlug }: LevelLadderProps) {
   const ladderData = useMemo(() => {
     // Standard order of levels
     const levelOrder = [
@@ -200,11 +201,20 @@ export function LevelLadder({ records }: LevelLadderProps) {
                     {/* Company Dots */}
                     {rung.companies.map(c => {
                       const posPct = getLeftPct(c.median);
+                      const isHighlighted = selectedCompanySlug === c.company.slug;
+                      const isAnyHighlighted = !!selectedCompanySlug;
+                      const isDimmed = isAnyHighlighted && !isHighlighted;
                       return (
                         <Tooltip key={c.company.slug}>
                           <TooltipTrigger render={
                             <div 
-                              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 size-5 rounded-full bg-background border-2 border-border overflow-hidden hover:scale-125 hover:z-10 transition-transform cursor-pointer shadow-sm"
+                              className={cn(
+                                "absolute top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full bg-background overflow-hidden hover:scale-125 hover:z-20 transition-all cursor-pointer shadow-sm",
+                                isHighlighted 
+                                  ? "size-6 border-2 border-brand-primary ring-2 ring-brand-primary/20 z-20 scale-110" 
+                                  : "size-5 border-2 border-border",
+                                isDimmed && "opacity-35 scale-90"
+                              )}
                               style={{ left: `${posPct}%` }}
                             >
                               <CompanyLogo

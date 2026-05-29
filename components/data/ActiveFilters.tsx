@@ -45,12 +45,12 @@ export function ActiveFilters() {
     });
   }
 
-  if (filters.locations.length > 0) {
-    filters.locations.forEach((loc) => {
+  if (filters.location.length > 0) {
+    filters.location.forEach((loc) => {
       activePills.push({
         id: `loc-${loc}`,
         label: loc,
-        onRemove: () => setFilters({ locations: filters.locations.filter((x) => x !== loc) }),
+        onRemove: () => setFilters({ location: filters.location.filter((x) => x !== loc) }),
       });
     });
   }

@@ -14,6 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { GitCompare, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useQueryState } from "nuqs";
+import { parseAsSlots } from "@/lib/searchParams";
+import { ShareButton } from "@/components/shared/ShareButton";
 
 interface SlotStats {
   slot: ComparisonSlot;
@@ -70,8 +73,31 @@ const METRICS = [
 ];
 
 export function CompareView() {
-  const { slots, removeFromComparison, clearComparison } = useComparisonStore();
+  const { slots: storeSlots } = useComparisonStore();
+  const [urlSlots, setUrlSlots] = useQueryState("slots", parseAsSlots.withDefault([]));
   const [liveAnnouncement, setLiveAnnouncement] = useState("");
+
+  // Bidirectional Synchronization between URL slots and Zustand store
+  useEffect(() => {
+    if (urlSlots.length > 0) {
+      useComparisonStore.setState({ slots: urlSlots });
+    } else if (storeSlots.length > 0 && urlSlots.length === 0) {
+      setUrlSlots(
+        storeSlots.filter(
+          (s): s is { companyId: string; role: string; level: NormalizedLevel } =>
+            !!s.companyId && !!s.role && !!s.level
+        )
+      );
+    }
+  }, [urlSlots, setUrlSlots, storeSlots]);
+
+  const slots = React.useMemo(() => {
+    const raw = urlSlots.length > 0 ? urlSlots : storeSlots;
+    return raw.filter(
+      (s): s is { companyId: string; role: string; level: NormalizedLevel } =>
+        !!s.companyId && !!s.role && !!s.level
+    );
+  }, [urlSlots, storeSlots]);
   const prevSlotsRef = useRef(slots);
 
   const filled = slots
@@ -82,7 +108,6 @@ export function CompareView() {
 
   useEffect(() => {
     if (slots.length > prevSlotsRef.current.length) {
-      // Slot added
       const addedSlotIndex = slots.length - 1;
       const addedSlot = slots[addedSlotIndex];
       if (addedSlot) {
@@ -90,7 +115,6 @@ export function CompareView() {
         setLiveAnnouncement(`Added ${companyName} ${addedSlot.role} (${addedSlot.level}) to comparison. ${slots.length} of 3 slots filled.`);
       }
     } else if (slots.length < prevSlotsRef.current.length) {
-      // Slot removed or cleared
       if (slots.length === 0) {
         setLiveAnnouncement("Cleared all comparison slots. 0 of 3 slots filled.");
       } else {
@@ -100,15 +124,29 @@ export function CompareView() {
     prevSlotsRef.current = slots;
   }, [slots]);
 
+  const handleRemove = (index: number) => {
+    const next = slots.filter((_, i) => i !== index);
+    setUrlSlots(next);
+    useComparisonStore.setState({ slots: next });
+  };
+
+  const handleClearAll = () => {
+    setUrlSlots([]);
+    useComparisonStore.setState({ slots: [] });
+  };
+
   return (
     <PageShell
       title="Compare Compensation"
       description="Compare up to three company / level / role combinations side by side."
       actions={
         slots.length > 0 ? (
-          <Button variant="outline" size="sm" onClick={clearComparison}>
-            Clear all
-          </Button>
+          <div className="flex items-center gap-2 select-none">
+            <ShareButton />
+            <Button variant="outline" size="sm" onClick={handleClearAll}>
+              Clear all
+            </Button>
+          </div>
         ) : undefined
       }
     >
@@ -125,7 +163,7 @@ export function CompareView() {
           action={
             <Link
               href="/"
-              className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 select-none"
             >
               <Plus className="mr-2 h-4 w-4" />
               Browse salaries
@@ -150,7 +188,7 @@ export function CompareView() {
                       alt={s.companyName}
                       width={40}
                       height={40}
-                      className="size-10 rounded-lg shrink-0"
+                      className="size-10 rounded-lg shrink-0 object-cover bg-muted"
                     />
                     <div className="min-w-0">
                       <p className="font-semibold truncate">{s.companyName}</p>
@@ -163,7 +201,7 @@ export function CompareView() {
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    onClick={() => removeFromComparison(i)}
+                    onClick={() => handleRemove(i)}
                     aria-label={`Remove ${s.companyName} ${s.role} (${s.level}) from comparison`}
                   >
                     <X className="size-4" />
@@ -189,7 +227,7 @@ export function CompareView() {
             {Array.from({ length: emptySlots }).map((_, i) => (
               <div
                 key={`empty-${i}`}
-                className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground"
+                className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground select-none"
               >
                 Empty slot — add from the salary table
               </div>
@@ -201,7 +239,7 @@ export function CompareView() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40">
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground w-36">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground w-36 select-none">
                     Metric
                   </th>
                   {filled.map((s, i) => (
@@ -212,19 +250,19 @@ export function CompareView() {
                           name={s.companyName}
                           width={28}
                           height={28}
-                          className="size-7 rounded-md"
+                          className="size-7 rounded-md object-cover bg-muted shrink-0"
                         />
-                        <div>
-                          <p className="font-semibold">{s.companyName}</p>
-                          <p className="text-xs text-muted-foreground font-normal">
+                        <div className="min-w-0">
+                          <p className="font-semibold truncate">{s.companyName}</p>
+                          <p className="text-xs text-muted-foreground font-normal truncate">
                             {s.role} · {s.level}
                           </p>
                         </div>
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          className="ml-auto shrink-0"
-                          onClick={() => removeFromComparison(i)}
+                          className="ml-auto shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+                          onClick={() => handleRemove(i)}
                           aria-label={`Remove ${s.companyName} ${s.role} (${s.level}) from comparison`}
                         >
                           <X className="size-3.5" />
@@ -235,7 +273,7 @@ export function CompareView() {
                   {Array.from({ length: emptySlots }).map((_, i) => (
                     <th
                       key={`e-${i}`}
-                      className="px-4 py-3 text-muted-foreground font-normal min-w-[140px]"
+                      className="px-4 py-3 text-muted-foreground font-normal min-w-[140px] select-none"
                     >
                       Empty slot
                     </th>
@@ -245,7 +283,7 @@ export function CompareView() {
               <tbody className="divide-y divide-border">
                 {METRICS.map((m) => (
                   <tr key={m.key}>
-                    <td className="px-4 py-3 text-muted-foreground">{m.label}</td>
+                    <td className="px-4 py-3 text-muted-foreground select-none">{m.label}</td>
                     {filled.map((s, i) => (
                       <td key={i} className={cn("px-4 py-3", m.key === "total" && "font-bold")}>
                         {m.key === "count"
@@ -254,7 +292,7 @@ export function CompareView() {
                       </td>
                     ))}
                     {Array.from({ length: emptySlots }).map((_, i) => (
-                      <td key={`e-${i}`} className="px-4 py-3 text-muted-foreground">
+                      <td key={`e-${i}`} className="px-4 py-3 text-muted-foreground select-none">
                         —
                       </td>
                     ))}

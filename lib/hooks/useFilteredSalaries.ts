@@ -52,12 +52,12 @@ function computeFilteredSalaries(
     filtered = filtered.filter((r) => filters.levels!.includes(r.normalizedLevel));
     isFiltered = true;
   }
-  if (filters.locations?.length) {
+  if (filters.location?.length) {
     filtered = filtered.filter(
       (r) =>
-        filters.locations!.includes(r.location.city) ||
-        filters.locations!.includes(r.location.country) ||
-        (r.location.region != null && filters.locations!.includes(r.location.region))
+        filters.location!.includes(r.location.city) ||
+        filters.location!.includes(r.location.country) ||
+        (r.location.region != null && filters.location!.includes(r.location.region))
     );
     isFiltered = true;
   }

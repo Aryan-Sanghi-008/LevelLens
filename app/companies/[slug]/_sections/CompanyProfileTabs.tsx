@@ -1,3 +1,7 @@
+"use client";
+
+import React from "react";
+import { useQueryStates, parseAsString } from "nuqs";
 import { getCompanyProfile, getGlobalLevelMedians } from "@/lib/data/companyStats";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
 import { formatCurrency, getPercentileBand, getLevelColor, getLevelBadgeVariant } from "@/lib/formatters";
@@ -11,8 +15,22 @@ import {
 } from "@/components/data/CompanyCompensationCards";
 import { cn } from "@/lib/utils";
 import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
-export async function CompanyProfileTabs({ slug }: { slug: string }) {
+export function CompanyProfileTabs({
+  slug,
+  initialTab,
+  initialLevel,
+}: {
+  slug: string;
+  initialTab: string;
+  initialLevel: string;
+}) {
+  const [query, setQuery] = useQueryStates({
+    tab: parseAsString.withDefault(initialTab),
+    level: parseAsString.withDefault(initialLevel),
+  });
+
   const profile = getCompanyProfile(slug);
   const globalMedians = getGlobalLevelMedians();
   if (!profile) notFound();
@@ -34,6 +52,17 @@ export async function CompanyProfileTabs({ slug }: { slug: string }) {
     })
     .filter((r): r is LevelCompRow => r !== null);
 
+  const filteredCompRows = React.useMemo(() => {
+    if (query.level === "ALL") return compRows;
+    return compRows.filter((r) => r.level === query.level);
+  }, [compRows, query.level]);
+
+  const filteredLevelsList = React.useMemo(() => {
+    const levels = Object.values(NormalizedLevel);
+    if (query.level === "ALL") return levels;
+    return levels.filter((l) => l === query.level);
+  }, [query.level]);
+
   const rolesMap = new Map<string, number[]>();
   MOCK_SALARIES.filter((r) => r.company.slug === slug).forEach((r) => {
     if (!rolesMap.has(r.role)) rolesMap.set(r.role, []);
@@ -52,7 +81,7 @@ export async function CompanyProfileTabs({ slug }: { slug: string }) {
     .sort((a, b) => b.count - a.count);
 
   return (
-    <Tabs defaultValue="compensation" className="w-full mt-4">
+    <Tabs value={query.tab} onValueChange={(v) => setQuery({ tab: v })} className="w-full mt-4">
       <TabsList className="flex w-full max-w-none h-auto overflow-x-auto justify-start gap-1 mb-6 p-1 md:grid md:max-w-2xl md:grid-cols-4 md:overflow-visible">
         <TabsTrigger value="compensation" className="shrink-0">
           Compensation
@@ -72,7 +101,36 @@ export async function CompanyProfileTabs({ slug }: { slug: string }) {
         value="compensation"
         className="bg-card border border-border rounded-xl shadow-sm overflow-hidden"
       >
-        <CompanyCompensationCards rows={compRows} globalMedians={globalMedians} />
+        {/* Levels Filter Bar */}
+        <div className="p-4 border-b border-border bg-muted/20 flex flex-wrap items-center gap-1.5">
+          <span className="text-xs font-semibold text-muted-foreground mr-1.5 select-none">
+            Filter by Level:
+          </span>
+          <Button
+            variant={query.level === "ALL" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setQuery({ level: "ALL" })}
+            className="h-7 text-xs rounded-full font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+          >
+            All Levels
+          </Button>
+          {compRows.map((r) => (
+            <Button
+              key={r.level}
+              variant={query.level === r.level ? "default" : "outline"}
+              size="sm"
+              onClick={() => setQuery({ level: r.level })}
+              className={cn(
+                "h-7 text-xs rounded-full font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary",
+                query.level === r.level && getLevelColor(r.level)
+              )}
+            >
+              {r.level}
+            </Button>
+          ))}
+        </div>
+
+        <CompanyCompensationCards rows={filteredCompRows} globalMedians={globalMedians} />
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-semibold">
@@ -86,7 +144,7 @@ export async function CompanyProfileTabs({ slug }: { slug: string }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {Object.values(NormalizedLevel).map((level) => {
+              {filteredLevelsList.map((level) => {
                 const comp = levelCompensation[level];
                 if (!comp || comp.count === 0) return null;
 
@@ -141,7 +199,7 @@ export async function CompanyProfileTabs({ slug }: { slug: string }) {
         value="levels"
         className="bg-card border border-border rounded-xl p-4 md:p-6 shadow-sm overflow-x-auto"
       >
-        <h2 className="text-xl font-bold mb-6">Level Distribution</h2>
+        <h2 className="text-xl font-bold mb-6 select-none">Level Distribution</h2>
         <LevelDistributionBar data={chartData} />
       </TabsContent>
 

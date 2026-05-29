@@ -304,8 +304,8 @@ export function FilterPanel() {
                   <div key={city} className="flex items-center space-x-2.5 py-0.5">
                     <Checkbox 
                       id={`loc-city-${city}`} 
-                      checked={filters.locations.includes(city)}
-                      onCheckedChange={() => setFilters({ locations: toggleArrayItem(filters.locations, city) })}
+                      checked={filters.location.includes(city)}
+                      onCheckedChange={() => setFilters({ location: toggleArrayItem(filters.location, city) })}
                     />
                     <label htmlFor={`loc-city-${city}`} className="text-xs text-foreground/80 cursor-pointer font-medium select-none truncate">
                       {city}
@@ -319,8 +319,8 @@ export function FilterPanel() {
                   <div key={country} className="flex items-center space-x-2.5 py-0.5">
                     <Checkbox 
                       id={`loc-country-${country}`} 
-                      checked={filters.locations.includes(country)}
-                      onCheckedChange={() => setFilters({ locations: toggleArrayItem(filters.locations, country) })}
+                      checked={filters.location.includes(country)}
+                      onCheckedChange={() => setFilters({ location: toggleArrayItem(filters.location, country) })}
                     />
                     <label htmlFor={`loc-country-${country}`} className="text-xs text-foreground/80 cursor-pointer font-medium select-none truncate">
                       {country}
@@ -334,8 +334,8 @@ export function FilterPanel() {
                   <div key={region} className="flex items-center space-x-2.5 py-0.5">
                     <Checkbox 
                       id={`loc-region-${region}`} 
-                      checked={filters.locations.includes(region)}
-                      onCheckedChange={() => setFilters({ locations: toggleArrayItem(filters.locations, region) })}
+                      checked={filters.location.includes(region)}
+                      onCheckedChange={() => setFilters({ location: toggleArrayItem(filters.location, region) })}
                     />
                     <label htmlFor={`loc-region-${region}`} className="text-xs text-foreground/80 cursor-pointer font-medium select-none truncate">
                       {region}

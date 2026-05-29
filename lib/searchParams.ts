@@ -1,22 +1,74 @@
 import {
+  createParser,
+  createSearchParamsCache,
   parseAsArrayOf,
   parseAsBoolean,
   parseAsInteger,
   parseAsString,
 } from "nuqs/server";
+import { NormalizedLevel } from "@/types";
 
-// Custom parser to map comma-separated strings if needed, though parseAsArrayOf(parseAsString) works fine
+// Custom parser to map slots: company-slug|role-slug|level joined by |, slots joined by ,
+export const parseAsSlots = createParser({
+  parse(queryValue) {
+    if (!queryValue) return [];
+    return queryValue
+      .split(",")
+      .map((s) => {
+        const parts = s.split("|");
+        if (parts.length < 3) return null;
+        const [companyId, role, level] = parts;
+        return { companyId, role, level: level as NormalizedLevel };
+      })
+      .filter((s): s is { companyId: string; role: string; level: NormalizedLevel } => s !== null);
+  },
+  serialize(value) {
+    if (!value || value.length === 0) return "";
+    return value.map((s) => `${s.companyId}|${s.role}|${s.level}`).join(",");
+  },
+});
+
+// Custom parser for minComp and maxComp to scale based on currency in URL
+const parseComp = () => createParser({
+  parse(queryValue) {
+    if (!queryValue) return null;
+    const num = parseInt(queryValue, 10);
+    if (isNaN(num)) return null;
+
+    let isINR = false;
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      isINR = params.get("currency") === "INR";
+    }
+    const scale = isINR ? 100000 : 1000;
+    return num * scale;
+  },
+  serialize(value) {
+    if (value === null || value === undefined) return "";
+    let isINR = false;
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      isINR = params.get("currency") === "INR";
+    }
+    const scale = isINR ? 100000 : 1000;
+    return Math.round(value / scale).toString();
+  }
+});
+
 export const filterParsers = {
   levels: parseAsArrayOf(parseAsString).withDefault([]),
   roles: parseAsArrayOf(parseAsString).withDefault([]),
   companies: parseAsArrayOf(parseAsString).withDefault([]),
-  locations: parseAsArrayOf(parseAsString).withDefault([]),
-  minComp: parseAsInteger,
-  maxComp: parseAsInteger,
+  location: parseAsArrayOf(parseAsString).withDefault([]),
+  minComp: parseComp(),
+  maxComp: parseComp(),
   minYoe: parseAsInteger,
   maxYoe: parseAsInteger,
   currency: parseAsString,
   verified: parseAsBoolean,
+  sort: parseAsString.withDefault("totalComp"),
+  order: parseAsString.withDefault("desc"),
+  page: parseAsInteger.withDefault(1),
 };
 
 // Helper for resetting
@@ -24,11 +76,25 @@ export const defaultFilters = {
   levels: null,
   roles: null,
   companies: null,
-  locations: null,
+  location: null,
   minComp: null,
   maxComp: null,
   minYoe: null,
   maxYoe: null,
   currency: null,
   verified: null,
+  sort: null,
+  order: null,
+  page: null,
 };
+
+export const homepageSearchParamsCache = createSearchParamsCache(filterParsers);
+
+export const companyProfileSearchParamsCache = createSearchParamsCache({
+  tab: parseAsString.withDefault("compensation"),
+  level: parseAsString.withDefault("ALL"),
+});
+
+export const roleProfileSearchParamsCache = createSearchParamsCache({
+  company: parseAsString.withDefault(""),
+});

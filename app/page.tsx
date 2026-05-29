@@ -12,7 +12,7 @@ import { LocationHeatmap } from "@/components/charts/LocationHeatmap";
 import { PercentileChart } from "@/components/charts/PercentileChart";
 import { useFilteredSalaries } from "@/lib/hooks/useFilteredSalaries";
 import { formatCurrency } from "@/lib/formatters";
-import { SortState, FilterState } from "@/types";
+import { SortState, FilterState, CompensationRecord } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { useQueryStates } from "nuqs";
@@ -25,16 +25,55 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { ShareButton } from "@/components/shared/ShareButton";
+import { FilterPresets } from "@/components/shared/FilterPresets";
+
+const sortMapUrlToTable: Record<string, keyof CompensationRecord> = {
+  totalComp: "totalCompensation",
+  base: "baseSalary",
+  stock: "stockPerYear",
+  reported: "reportedAt",
+};
+
+const sortMapTableToUrl: Record<string, string> = {
+  totalCompensation: "totalComp",
+  baseSalary: "base",
+  stockPerYear: "stock",
+  reportedAt: "reported",
+};
 
 function HomeContent() {
-  const [filters] = useQueryStates(filterParsers);
-  const [sort] = useState<SortState>({ field: "totalCompensation", direction: "desc" });
+  const [filters, setFilters] = useQueryStates(filterParsers);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
-  const [tableSorting, setTableSorting] = useState<SortingState>([
-    { id: "totalCompensation", desc: true },
-  ]);
 
-  const { data, isPending } = useFilteredSalaries(filters as Partial<FilterState>, sort);
+  const sortField = sortMapUrlToTable[filters.sort] || "totalCompensation";
+  const sortDirection = (filters.order === "asc" || filters.order === "desc") ? filters.order : "desc";
+
+  const derivedSortState = React.useMemo<SortState>(() => ({
+    field: sortField,
+    direction: sortDirection,
+  }), [sortField, sortDirection]);
+
+  const tableSorting = React.useMemo<SortingState>(() => [
+    { id: String(sortField), desc: sortDirection === "desc" }
+  ], [sortField, sortDirection]);
+
+  const handleSortingChange = React.useCallback(
+    (updaterOrValue: SortingState | ((old: SortingState) => SortingState)) => {
+      const nextSorting = typeof updaterOrValue === "function" ? updaterOrValue(tableSorting) : updaterOrValue;
+      if (nextSorting.length > 0) {
+        const { id, desc } = nextSorting[0];
+        const sortVal = sortMapTableToUrl[id] || "totalComp";
+        const orderVal = desc ? "desc" : "asc";
+        setFilters({ sort: sortVal, order: orderVal, page: 1 });
+      } else {
+        setFilters({ sort: null, order: null, page: 1 });
+      }
+    },
+    [tableSorting, setFilters]
+  );
+
+  const { data, isPending } = useFilteredSalaries(filters as Partial<FilterState>, derivedSortState);
   const activeFilterCount = countActiveFilters(filters as Partial<FilterState>);
 
   const filteredMedian = React.useMemo(() => {
@@ -79,7 +118,7 @@ function HomeContent() {
         activeFilterCount={activeFilterCount}
         onOpenFilters={() => setFilterSheetOpen(true)}
         sorting={tableSorting}
-        onSortingChange={setTableSorting}
+        onSortingChange={handleSortingChange}
       />
 
       <FilterSheet
@@ -102,6 +141,13 @@ function HomeContent() {
         <div className="hidden md:block w-[320px] shrink-0">{filterTabs}</div>
 
         <div className="flex-1 min-w-0 flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card border rounded-lg p-3.5 px-4 shadow-sm">
+            <FilterPresets className="flex-1" />
+            <div className="flex items-center gap-2 shrink-0">
+              <ShareButton />
+            </div>
+          </div>
+
           <div className="flex flex-wrap items-center justify-between bg-card border rounded-lg p-3 px-4 shadow-sm gap-2">
             <div className="text-sm font-medium text-muted-foreground flex flex-wrap items-center gap-2">
               <span className="font-bold text-foreground">{data.length}</span> data points
@@ -138,7 +184,7 @@ function HomeContent() {
               isLoading={false}
               isPending={isPending}
               sorting={tableSorting}
-              onSortingChange={setTableSorting}
+              onSortingChange={handleSortingChange}
             />
           </Suspense>
         </div>

@@ -77,7 +77,7 @@ export function SalaryDetailDrawer({ record, isOpen, onClose }: SalaryDetailDraw
     url.searchParams.set("roles", record.role);
     url.searchParams.set("companies", record.company.slug);
     url.searchParams.set("levels", record.normalizedLevel);
-    url.searchParams.set("locations", record.location.city);
+    url.searchParams.set("location", record.location.city);
     navigator.clipboard.writeText(url.toString());
     toast.success("Link copied to clipboard with applied filters");
   };
@@ -220,7 +220,7 @@ export function SalaryDetailDrawer({ record, isOpen, onClose }: SalaryDetailDraw
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="font-bold text-sm">Similar in {record.location.city}</h4>
-                  <Link href={`/?roles=${record.role}&levels=${record.normalizedLevel}&locations=${record.location.city}`} className="text-xs font-semibold text-brand-primary hover:underline flex items-center gap-1">
+                  <Link href={`/?roles=${record.role}&levels=${record.normalizedLevel}&location=${record.location.city}`} className="text-xs font-semibold text-brand-primary hover:underline flex items-center gap-1">
                     View all <LinkIcon className="size-3" />
                   </Link>
                 </div>
