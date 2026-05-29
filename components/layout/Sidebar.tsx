@@ -10,7 +10,8 @@ import {
   TrendingUp, 
   MapPin, 
   Info, 
-  BookOpen
+  BookOpen,
+  BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +34,7 @@ const NAV_DATA: NavSection[] = [
       { title: "Salary Table", href: "/", icon: Table2 },
       { title: "Companies", href: "/companies", icon: Building2 },
       { title: "Roles", href: "/roles", icon: Briefcase },
+      { title: "Analytics", href: "/analytics", icon: BarChart3 },
     ],
   },
   {
