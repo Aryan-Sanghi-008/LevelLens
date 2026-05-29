@@ -32,7 +32,7 @@ function HomeContent() {
   const [filters] = useQueryStates(filterParsers);
   const [sort] = useState<SortState>({ field: "totalCompensation", direction: "desc" });
 
-  const { data } = useFilteredSalaries(filters as Partial<FilterState>, sort);
+  const { data, isPending } = useFilteredSalaries(filters as Partial<FilterState>, sort);
 
   const filteredMedian = React.useMemo(() => {
     if (!data || data.length === 0) return 0;
@@ -172,7 +172,20 @@ function HomeContent() {
             </Accordion>
           )}
 
-          <SalaryTable data={data} isLoading={false} />
+          <Suspense fallback={
+            <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="h-10 bg-muted/40 border-b border-border" />
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 px-4 border-b border-border/50" style={{ height: 56 }}>
+                  <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+                  <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+                  <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          }>
+            <SalaryTable data={data} isLoading={false} isPending={isPending} />
+          </Suspense>
         </div>
       </div>
     </PageShell>

@@ -3,24 +3,24 @@
 import * as React from "react";
 import {
   ColumnDef,
-  ColumnFiltersState,
-  SortingState,
   VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
+  SortingState,
   useReactTable,
+  Row,
 } from "@tanstack/react-table";
-import { 
-  ArrowUpDown, 
-  ChevronDown, 
-  ShieldCheck, 
-  Plus, 
+import { useVirtualizer } from "@tanstack/react-virtual";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  ShieldCheck,
+  Plus,
   ExternalLink,
   SlidersHorizontal,
-  Search
+  Search,
+  Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -31,320 +31,529 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { CompensationRecord } from "@/types";
 import Image from "next/image";
-import { formatCurrency, getLevelColor, getLevelBadgeVariant, formatYoE } from "@/lib/formatters";
+import {
+  formatCurrency,
+  getLevelColor,
+  getLevelBadgeVariant,
+  formatYoE,
+} from "@/lib/formatters";
 import { useComparisonStore } from "@/lib/hooks/useComparisonStore";
 import { SalaryDetailDrawer } from "@/components/data/SalaryDetailDrawer";
 
-function getCountryFlag(country: string) {
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+/** Fixed row height — must match the actual rendered row height */
+const ROW_HEIGHT = 56;
+const OVERSCAN = 10;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function getCountryFlag(country: string): string {
   const flags: Record<string, string> = {
     "United States": "🇺🇸",
-    "India": "🇮🇳",
+    India: "🇮🇳",
     "United Kingdom": "🇬🇧",
-    "Canada": "🇨🇦",
-    "Germany": "🇩🇪",
-    "Australia": "🇦🇺",
-    "Singapore": "🇸🇬",
-    "France": "🇫🇷",
-    "Netherlands": "🇳🇱",
-    "Switzerland": "🇨🇭",
+    Canada: "🇨🇦",
+    Germany: "🇩🇪",
+    Australia: "🇦🇺",
+    Singapore: "🇸🇬",
+    France: "🇫🇷",
+    Netherlands: "🇳🇱",
+    Switzerland: "🇨🇭",
   };
   return flags[country] || "🌍";
 }
 
-function formatRelativeTime(dateStr: string) {
+function formatRelativeTime(dateStr: string): string {
   const date = new Date(dateStr);
   const now = new Date();
-  const diffInMonths = (now.getFullYear() - date.getFullYear()) * 12 + now.getMonth() - date.getMonth();
+  const diffInMonths =
+    (now.getFullYear() - date.getFullYear()) * 12 +
+    now.getMonth() -
+    date.getMonth();
   if (diffInMonths <= 0) return "This month";
   if (diffInMonths === 1) return "1 month ago";
   return `${diffInMonths} months ago`;
 }
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 interface SalaryTableProps {
   data: CompensationRecord[];
   isLoading?: boolean;
+  isPending?: boolean;
 }
 
-export function SalaryTable({ data, isLoading }: SalaryTableProps) {
+// ─── Scroll position indicator ────────────────────────────────────────────────
+
+function ScrollPositionBar({
+  scrollTop,
+  totalHeight,
+  containerHeight,
+}: {
+  scrollTop: number;
+  totalHeight: number;
+  containerHeight: number;
+}) {
+  if (totalHeight <= containerHeight) return null;
+
+  const thumbHeight = Math.max(
+    40,
+    (containerHeight / totalHeight) * containerHeight
+  );
+  const maxScroll = totalHeight - containerHeight;
+  const thumbTop = (scrollTop / maxScroll) * (containerHeight - thumbHeight);
+
+  return (
+    <div
+      className="absolute right-0 top-0 bottom-0 w-1 bg-border/50 z-30 rounded-full"
+      aria-hidden="true"
+    >
+      <div
+        className="absolute w-full bg-muted-foreground/40 rounded-full transition-none"
+        style={{ height: thumbHeight, top: thumbTop }}
+      />
+    </div>
+  );
+}
+
+// ─── SalaryTable ─────────────────────────────────────────────────────────────
+
+export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
+  const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({});
   const [selectedRecord, setSelectedRecord] = React.useState<CompensationRecord | null>(null);
-  const addToComparison = useComparisonStore((state) => state.addToComparison);
+  const [scrollTop, setScrollTop] = React.useState(0);
 
+  const addToComparison = useComparisonStore(
+    React.useCallback((state) => state.addToComparison, [])
+  );
 
-  const columns: ColumnDef<CompensationRecord>[] = [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-          className="translate-y-[2px]"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-          className="translate-y-[2px]"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      accessorKey: "company",
-      header: "Company",
-      cell: ({ row }) => {
-        const company = row.original.company;
-        return (
-          <div className="flex items-center gap-3">
-            <Image 
-              src={company.logo || "https://ui-avatars.com/api/?name=Company"} 
-              alt={company.name || "Company"}
-              width={32}
-              height={32}
-              className="h-8 w-8 rounded-md bg-muted object-cover" 
-            />
-            <div className="flex flex-col">
-              <span className="font-semibold text-sm">{company.name}</span>
-              {company.industry && (
-                <span className="text-[11px] text-muted-foreground">{company.industry}</span>
-              )}
-            </div>
-          </div>
-        );
+  // ── Column definitions (memoised) ──────────────────────────────────────────
+
+  const columns = React.useMemo<ColumnDef<CompensationRecord>[]>(
+    () => [
+      {
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            checked={table.getIsAllRowsSelected()}
+            onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
+            aria-label="Select all"
+            className="translate-y-[2px]"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+            className="translate-y-[2px]"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+        size: 40,
       },
-      // Sticky styling will be applied in the render loop
-    },
-    {
-      accessorKey: "role",
-      header: "Role & Level",
-      cell: ({ row }) => {
-        const role = row.original.role;
-        const rawTitle = row.original.rawTitle;
-        const level = row.original.normalizedLevel;
-        return (
-          <div className="flex flex-col items-start gap-1">
-            <span className="font-medium text-sm">{role}</span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground truncate max-w-[120px]" title={rawTitle}>
-                {rawTitle}
+      {
+        accessorKey: "company",
+        header: "Company",
+        cell: ({ row }) => {
+          const company = row.original.company;
+          return (
+            <div className="flex items-center gap-3">
+              <Image
+                src={
+                  company.logo ||
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=random&color=fff&rounded=true`
+                }
+                alt={company.name || "Company"}
+                width={32}
+                height={32}
+                className="h-8 w-8 rounded-md bg-muted object-cover shrink-0"
+                unoptimized
+              />
+              <div className="flex flex-col min-w-0">
+                <span className="font-semibold text-sm truncate">{company.name}</span>
+                {company.industry && (
+                  <span className="text-[11px] text-muted-foreground truncate">
+                    {company.industry}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        },
+        size: 180,
+      },
+      {
+        accessorKey: "role",
+        header: "Role & Level",
+        cell: ({ row }) => {
+          const level = row.original.normalizedLevel;
+          return (
+            <div className="flex flex-col items-start gap-0.5">
+              <span className="font-medium text-sm">{row.original.role}</span>
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="text-xs text-muted-foreground truncate max-w-[110px]"
+                  title={row.original.rawTitle}
+                >
+                  {row.original.rawTitle}
+                </span>
+                <Badge
+                  variant={getLevelBadgeVariant(level)}
+                  className={cn("text-[10px] px-1.5 py-0 shrink-0", getLevelColor(level))}
+                >
+                  {level}
+                </Badge>
+              </div>
+            </div>
+          );
+        },
+        size: 200,
+      },
+      {
+        accessorKey: "location",
+        header: "Location",
+        cell: ({ row }) => {
+          const loc = row.original.location;
+          return (
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <span>{getCountryFlag(loc.country)}</span>
+              <span className="text-sm">{loc.city}</span>
+            </div>
+          );
+        },
+        size: 120,
+      },
+      {
+        accessorKey: "baseSalary",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Base
+            <ArrowUpDown className="ml-1.5 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm">
+            {formatCurrency(
+              row.getValue<number>("baseSalary"),
+              row.original.currency,
+              true
+            )}
+          </span>
+        ),
+        size: 100,
+      },
+      {
+        accessorKey: "stockPerYear",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Stock/yr
+            <ArrowUpDown className="ml-1.5 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+          const val = row.getValue<number>("stockPerYear");
+          return (
+            <span className="text-sm text-muted-foreground">
+              {val > 0 ? formatCurrency(val, row.original.currency, true) : "—"}
+            </span>
+          );
+        },
+        size: 100,
+      },
+      {
+        accessorKey: "bonus",
+        header: "Bonus",
+        cell: ({ row }) => {
+          const val = row.getValue<number>("bonus");
+          return (
+            <span className="text-sm text-muted-foreground">
+              {val > 0 ? formatCurrency(val, row.original.currency, true) : "—"}
+            </span>
+          );
+        },
+        size: 90,
+      },
+      {
+        accessorKey: "totalCompensation",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Total Comp
+            <ArrowUpDown className="ml-1.5 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm font-bold text-foreground">
+            {formatCurrency(
+              row.getValue<number>("totalCompensation"),
+              row.original.currency,
+              true
+            )}
+          </span>
+        ),
+        size: 120,
+      },
+      {
+        accessorKey: "yearsOfExperience",
+        header: "YoE",
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground">
+            {formatYoE(row.getValue<number>("yearsOfExperience"))}
+          </span>
+        ),
+        size: 70,
+      },
+      {
+        accessorKey: "reportedAt",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Reported
+            <ArrowUpDown className="ml-1.5 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <span className="text-xs text-muted-foreground">
+            {formatRelativeTime(row.getValue<string>("reportedAt"))}
+          </span>
+        ),
+        size: 110,
+      },
+      {
+        accessorKey: "verified",
+        header: "Status",
+        cell: ({ row }) => {
+          const verified = row.getValue<boolean>("verified");
+          const tags = row.original.tags ?? [];
+          const isSelfReported = tags.includes("self-reported");
+
+          if (isSelfReported) {
+            return (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[10px] font-semibold px-2 py-0.5">
+                Self-reported
               </span>
-              <Badge variant={getLevelBadgeVariant(level)} className={cn("text-[10px] px-1.5 py-0", getLevelColor(level))}>
-                {level}
-              </Badge>
+            );
+          }
+          if (!verified) {
+            return (
+              <span className="text-xs text-muted-foreground">Unverified</span>
+            );
+          }
+          return (
+            <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-500">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              <span className="text-xs font-medium">Verified</span>
             </div>
-          </div>
-        );
+          );
+        },
+        size: 100,
       },
-    },
-    {
-      accessorKey: "location",
-      header: "Location",
-      cell: ({ row }) => {
-        const loc = row.original.location;
-        return (
-          <div className="flex items-center gap-1.5 whitespace-nowrap">
-            <span>{getCountryFlag(loc.country)}</span>
-            <span className="text-sm">{loc.city}</span>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "baseSalary",
-      header: ({ column }) => (
-        <Button variant="ghost" size="sm" className="-ml-3 h-8 data-[state=open]:bg-accent" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Base
-          <ArrowUpDown className="ml-2 h-3 w-3" />
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const val = row.getValue("baseSalary") as number;
-        return <span className="text-sm">{formatCurrency(val, row.original.currency, true)}</span>;
-      },
-    },
-    {
-      accessorKey: "stockPerYear",
-      header: ({ column }) => (
-        <Button variant="ghost" size="sm" className="-ml-3 h-8 data-[state=open]:bg-accent" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Stock / yr
-          <ArrowUpDown className="ml-2 h-3 w-3" />
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const val = row.getValue("stockPerYear") as number;
-        return <span className="text-sm text-muted-foreground">{val > 0 ? formatCurrency(val, row.original.currency, true) : "-"}</span>;
-      },
-    },
-    {
-      accessorKey: "bonus",
-      header: "Bonus",
-      cell: ({ row }) => {
-        const val = row.getValue("bonus") as number;
-        return <span className="text-sm text-muted-foreground">{val > 0 ? formatCurrency(val, row.original.currency, true) : "-"}</span>;
-      },
-    },
-    {
-      accessorKey: "totalCompensation",
-      header: ({ column }) => (
-        <Button variant="ghost" size="sm" className="-ml-3 h-8 data-[state=open]:bg-accent" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Total Comp
-          <ArrowUpDown className="ml-2 h-3 w-3" />
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const val = row.getValue("totalCompensation") as number;
-        return <span className="text-sm font-bold text-foreground">{formatCurrency(val, row.original.currency, true)}</span>;
-      },
-    },
-    {
-      accessorKey: "yearsOfExperience",
-      header: "YoE",
-      cell: ({ row }) => {
-        const yoe = row.getValue("yearsOfExperience") as number;
-        return <span className="text-sm text-muted-foreground">{formatYoE(yoe)}</span>;
-      },
-    },
-    {
-      accessorKey: "reportedAt",
-      header: ({ column }) => (
-        <Button variant="ghost" size="sm" className="-ml-3 h-8 data-[state=open]:bg-accent" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Reported
-          <ArrowUpDown className="ml-2 h-3 w-3" />
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const dateStr = row.getValue("reportedAt") as string;
-        return <span className="text-xs text-muted-foreground">{formatRelativeTime(dateStr)}</span>;
-      },
-    },
-    {
-      accessorKey: "verified",
-      header: "Status",
-      cell: ({ row }) => {
-        const verified = row.getValue("verified") as boolean;
-        if (!verified) return <span className="text-xs text-muted-foreground">Unverified</span>;
-        return (
-          <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-500">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            <span className="text-xs font-medium">Verified</span>
-          </div>
-        );
-      },
-    },
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        return (
-          <div className="flex items-center justify-end gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 text-muted-foreground hover:text-brand-primary"
+      {
+        id: "actions",
+        cell: ({ row }) => (
+          <div className="flex items-center justify-end gap-1.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-primary"
               title="Add to compare"
               onClick={(e) => {
                 e.stopPropagation();
                 addToComparison({
                   companyId: row.original.company.slug,
                   level: row.original.normalizedLevel,
-                  role: row.original.role
+                  role: row.original.role,
                 });
               }}
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-              <ExternalLink className="h-4 w-4" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground"
+              title="Open detail"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
             </Button>
           </div>
-        );
+        ),
+        size: 80,
+        enableHiding: false,
+        enableSorting: false,
       },
-    },
-  ];
+    ],
+    [addToComparison]
+  );
+
+  // ── TanStack Table instance ────────────────────────────────────────────────
 
   const table = useReactTable({
     data,
     columns,
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
+    state: { sorting, columnVisibility, rowSelection },
+    // No pagination — virtualisation handles this
+    manualPagination: false,
   });
 
+  const { rows } = table.getRowModel();
+
+  // ── Virtual scrolling ──────────────────────────────────────────────────────
+
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: OVERSCAN,
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+  const totalHeight = virtualizer.getTotalSize();
+
+  // Track scroll position for the indicator bar
+  const handleScroll = React.useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      setScrollTop(e.currentTarget.scrollTop);
+    },
+    []
+  );
+
+  // ── Row click handler ──────────────────────────────────────────────────────
+
+  const handleRowClick = React.useCallback(
+    (row: Row<CompensationRecord>) => {
+      setSelectedRecord(row.original);
+    },
+    []
+  );
+
+  // ── Column visibility toggle ───────────────────────────────────────────────
+
+  const toggleColumnVisibility = React.useCallback(
+    (columnId: string, value: boolean) => {
+      table.getColumn(columnId)?.toggleVisibility(value);
+    },
+    [table]
+  );
+
+  // ── Header groups (memoised) ───────────────────────────────────────────────
+
+  const headerGroups = React.useMemo(
+    () => table.getHeaderGroups(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [table, sorting, columnVisibility]
+  );
+
+  const hiddenColumns = React.useMemo(
+    () =>
+      table
+        .getAllColumns()
+        .filter((col) => col.getCanHide()),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [table, columnVisibility]
+  );
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
   return (
-    <div className="w-full space-y-4">
-      {/* Table Toolbar */}
-      <div className="flex items-center justify-between">
+    <div className="w-full space-y-3">
+      {/* Toolbar */}
+      <div className="flex items-center justify-end gap-2">
+        {isPending && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground animate-in fade-in duration-200">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            Filtering…
+          </div>
+        )}
         <DropdownMenu>
-          <DropdownMenuTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3 ml-auto">
-            <SlidersHorizontal className="mr-2 h-4 w-4" />
+          <DropdownMenuTrigger
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3"
+          >
+            <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" />
             Columns
+            <ChevronDown className="h-3.5 w-3.5 opacity-50" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize text-sm"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                  >
-                    {column.id.replace(/([A-Z])/g, ' $1').trim()}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
+          <DropdownMenuContent align="end" className="w-48">
+            {hiddenColumns.map((column) => (
+              <DropdownMenuCheckboxItem
+                key={column.id}
+                className="capitalize text-sm"
+                checked={column.getIsVisible()}
+                onCheckedChange={(value) =>
+                  toggleColumnVisibility(column.id, !!value)
+                }
+              >
+                {column.id.replace(/([A-Z])/g, " $1").trim()}
+              </DropdownMenuCheckboxItem>
+            ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      {/* Table Wrapper */}
-      <div className="rounded-md border border-border bg-card shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table className="w-full min-w-[800px]">
-            <TableHeader className="bg-muted/40">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
+      {/* Table Container */}
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden relative">
+        {/* Sticky Header — rendered outside the scroll container */}
+        <div className="overflow-x-auto bg-muted/40 border-b border-border">
+          <table
+            className="w-full min-w-[860px] border-collapse"
+            style={{ tableLayout: "fixed" }}
+          >
+            <colgroup>
+              {columns.map((col) => (
+                <col
+                  key={"id" in col ? col.id : (col as { accessorKey: string }).accessorKey}
+                  style={{ width: col.size ?? 120 }}
+                />
+              ))}
+            </colgroup>
+            <thead>
+              {headerGroups.map((headerGroup) => (
+                <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header, idx) => {
-                    // Sticky logic for company column (index 1)
                     const isSticky = idx === 1;
                     return (
-                      <TableHead 
+                      <th
                         key={header.id}
                         className={cn(
-                          "whitespace-nowrap h-10",
-                          isSticky && "sticky left-0 bg-muted/40 z-20 shadow-[1px_0_0_0_theme(colors.border)]"
+                          "h-10 px-3 text-left text-xs font-semibold text-muted-foreground whitespace-nowrap",
+                          isSticky &&
+                            "sticky left-0 z-20 bg-muted/60 shadow-[1px_0_0_0_hsl(var(--border))]"
                         )}
                       >
                         {header.isPlaceholder
@@ -353,132 +562,164 @@ export function SalaryTable({ data, isLoading }: SalaryTableProps) {
                               header.column.columnDef.header,
                               header.getContext()
                             )}
-                      </TableHead>
+                      </th>
                     );
                   })}
-                </TableRow>
+                </tr>
               ))}
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 8 }).map((_, i) => (
-                  <TableRow key={i}>
-                    {columns.map((c, j) => (
-                      <TableCell key={j} className={cn(j === 1 && "sticky left-0 bg-card z-10 shadow-[1px_0_0_0_theme(colors.border)]")}>
-                        <Skeleton className="h-5 w-full max-w-[100px]" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className={cn(
-                      "cursor-pointer hover:bg-muted/50 transition-colors group relative",
-                      row.getIsSelected() && "border-l-2 border-l-brand-primary"
-                    )}
-                    onClick={() => {
-                      setSelectedRecord(row.original);
-                    }}
-                  >
-                    {row.getVisibleCells().map((cell, idx) => {
-                      const isSticky = idx === 1;
-                      return (
-                        <TableCell 
-                          key={cell.id} 
-                          className={cn(
-                            "py-3",
-                            isSticky && "sticky left-0 bg-card group-hover:bg-muted/50 transition-colors z-10 shadow-[1px_0_0_0_theme(colors.border)]"
-                          )}
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-64 text-center"
-                  >
-                    <div className="flex flex-col items-center justify-center text-muted-foreground space-y-3">
-                      <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-                        <Search className="h-8 w-8 text-muted-foreground/50" />
-                      </div>
-                      <p>No results match your filters.</p>
-                      <Button variant="outline" size="sm" onClick={() => table.resetColumnFilters()}>
-                        Clear filters
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+            </thead>
+          </table>
         </div>
+
+        {/* Virtualised Body */}
+        {isLoading ? (
+          <div className="overflow-x-auto">
+            <table
+              className="w-full min-w-[860px] border-collapse"
+              style={{ tableLayout: "fixed" }}
+            >
+              <colgroup>
+                {columns.map((col) => (
+                  <col
+                    key={"id" in col ? col.id : (col as { accessorKey: string }).accessorKey}
+                    style={{ width: col.size ?? 120 }}
+                  />
+                ))}
+              </colgroup>
+              <tbody>
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <tr key={i} style={{ height: ROW_HEIGHT }}>
+                    {columns.map((col, j) => (
+                      <td
+                        key={j}
+                        className={cn(
+                          "px-3",
+                          j === 1 &&
+                            "sticky left-0 bg-card shadow-[1px_0_0_0_hsl(var(--border))]"
+                        )}
+                      >
+                        <Skeleton className="h-4 w-full max-w-[100px]" />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-56 text-muted-foreground gap-3">
+            <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
+              <Search className="h-6 w-6 text-muted-foreground/50" />
+            </div>
+            <p className="text-sm">No results match your filters.</p>
+          </div>
+        ) : (
+          <div
+            ref={scrollContainerRef}
+            className="overflow-auto relative"
+            style={{ height: Math.min(totalHeight, 600) }}
+            onScroll={handleScroll}
+          >
+            {/* Total height spacer */}
+            <div style={{ height: totalHeight, width: "100%", position: "relative" }}>
+              {/* Virtual rows */}
+              <table
+                className="w-full min-w-[860px] border-collapse absolute top-0 left-0"
+                style={{ tableLayout: "fixed" }}
+              >
+                <colgroup>
+                  {columns.map((col) => (
+                    <col
+                      key={"id" in col ? col.id : (col as { accessorKey: string }).accessorKey}
+                      style={{ width: col.size ?? 120 }}
+                    />
+                  ))}
+                </colgroup>
+                <tbody>
+                  {virtualItems.map((virtualRow) => {
+                    const row = rows[virtualRow.index];
+                    if (!row) return null;
+                    const isSelfReported = row.original.tags?.includes("self-reported");
+
+                    return (
+                      <tr
+                        key={row.id}
+                        data-index={virtualRow.index}
+                        data-state={row.getIsSelected() ? "selected" : undefined}
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: ROW_HEIGHT,
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                        className={cn(
+                          "group cursor-pointer border-b border-border/50 transition-colors hover:bg-muted/40",
+                          row.getIsSelected() && "bg-primary/5",
+                          isSelfReported && "bg-amber-50/40 dark:bg-amber-500/5"
+                        )}
+                        onClick={() => handleRowClick(row)}
+                      >
+                        {row.getVisibleCells().map((cell, idx) => {
+                          const isSticky = idx === 1;
+                          return (
+                            <td
+                              key={cell.id}
+                              className={cn(
+                                "px-3 overflow-hidden",
+                                isSticky &&
+                                  "sticky left-0 z-10 bg-card group-hover:bg-muted/40 transition-colors shadow-[1px_0_0_0_hsl(var(--border))]",
+                                row.getIsSelected() && isSticky && "bg-primary/5"
+                              )}
+                              style={{ height: ROW_HEIGHT }}
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Scroll position indicator */}
+            <ScrollPositionBar
+              scrollTop={scrollTop}
+              totalHeight={totalHeight}
+              containerHeight={Math.min(totalHeight, 600)}
+            />
+          </div>
+        )}
+
+        {/* Footer: row count */}
+        {!isLoading && rows.length > 0 && (
+          <div className="flex items-center justify-between px-4 py-2.5 border-t border-border bg-muted/20 text-xs text-muted-foreground">
+            <span>
+              <span className="font-semibold text-foreground">{rows.length.toLocaleString()}</span>{" "}
+              records
+              {rowSelection && Object.keys(rowSelection).length > 0 && (
+                <span className="ml-2 text-primary font-medium">
+                  · {Object.keys(rowSelection).length} selected
+                </span>
+              )}
+            </span>
+            <span className="text-[11px]">
+              Scroll to explore · {OVERSCAN}-row overscan active
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Pagination Controls */}
-      <div className="flex items-center justify-between px-2">
-        <div className="flex-1 text-sm text-muted-foreground">
-          Showing {table.getPaginationRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} results.
-        </div>
-        <div className="flex items-center space-x-6 lg:space-x-8">
-          <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Rows per page</p>
-            <select
-              className="h-8 w-[70px] rounded-md border border-input bg-transparent px-2 py-1 text-sm outline-none ring-offset-background focus:ring-1 focus:ring-ring"
-              value={table.getState().pagination.pageSize}
-              onChange={(e) => {
-                table.setPageSize(Number(e.target.value));
-              }}
-            >
-              {[10, 25, 50, 100].map((pageSize) => (
-                <option key={pageSize} value={pageSize}>
-                  {pageSize}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              className="h-8 w-8 p-0"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              <span className="sr-only">Go to previous page</span>
-              <ChevronDown className="h-4 w-4 rotate-90" />
-            </Button>
-            <Button
-              variant="outline"
-              className="h-8 w-8 p-0"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              <span className="sr-only">Go to next page</span>
-              <ChevronDown className="h-4 w-4 -rotate-90" />
-            </Button>
-          </div>
-        </div>
-      </div>
-      
-      <SalaryDetailDrawer 
-        record={selectedRecord} 
-        isOpen={!!selectedRecord} 
-        onClose={() => setSelectedRecord(null)} 
+      <SalaryDetailDrawer
+        record={selectedRecord}
+        isOpen={!!selectedRecord}
+        onClose={React.useCallback(() => setSelectedRecord(null), [])}
       />
     </div>
   );
