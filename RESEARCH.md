@@ -1,232 +1,205 @@
-# Competitive Analysis & UX Research: LevelLens
+# Competitive Analysis & Frontend Architecture Research: LevelLens
 
-Welcome to the foundational research document for **LevelLens**. This document covers a deep-dive competitive analysis of four primary compensation and career benchmarking platforms: **Levels.fyi**, **6figr**, **AmbitionBox**, and **Glassdoor**. 
-
-This research highlights critical industry gaps, analyzes feature footprints, and defines **five core design decisions** that will guide the development of LevelLens.
+Welcome to the definitive research and architectural documentation for **LevelLens**. This document outlines the deep competitive landscape, product design philosophies, frontend engineering decisions, and future roadmap that define our platform.
 
 ---
 
-## 1. Deep-Dive Platform Profiles
+## Executive Summary
+**LevelLens** is a modern, high-integrity career intelligence and compensation benchmarking platform designed specifically for the technology sector. By centering the entire user experience around a **levels-first** architectural model, LevelLens solves the problem of "title inflation" and "level fragmentation" that compromises legacy platforms. Our design replaces aggressive corporate paywalls with a transparent, highly accessible, and premium dark-first user interface that empowers candidates to negotiate with absolute financial clarity.
+
+---
+
+## Platform Analysis
 
 ### 📊 Levels.fyi
-*The Gold Standard for High-Tech Compensation & Level Mapping*
+*The industry pioneer in tech level normalization and high-integrity data granularity.*
 
-```mermaid
-graph TD
-    A[Levels.fyi Data Model] --> B[Base Salary]
-    A --> C[Annual Bonus]
-    A --> D[Equity: RSUs / Stock Options]
-    A --> E[Benefits & Perks]
-    F[Normalized Level Grid] --> G[L3 / E3 - Entry]
-    F --> H[L4 / E4 - Mid]
-    F --> I[L5 / E5 - Senior]
-    F --> J[L6 / E6 - Staff]
-```
-
-*   **Core Positioning:**
-    Targeted specifically at high-skilled tech professionals (Software Engineers, Product Managers, Designers, Data Scientists, etc.). It focuses on crowdsourcing highly granular, high-integrity compensation data from tier-1 and tier-2 tech hubs globally.
-*   **Compensation Structure:**
-    Superb granularity. It separates compensation into **Base Salary**, **Annual Bonus**, and **Equity (stock grant value per year or over 4 years)**, which combine to form the **Total Compensation (TC)**. It also captures specific equity details (e.g., RSUs vs. stock options, vesting schedules).
-*   **Level System:**
-    Pioneered normalized leveling across companies. Users can view a side-by-side grid mapping levels across tech giants (e.g., Google L5 = Meta E5 = Apple ICT4 = Microsoft 63/64). This resolves title inflation and fragmentation.
-*   **Filtering and Search UX Patterns:**
-    Clean, responsive search filters. Users can filter by title, company, location, years of experience (YoE), and specific leveling bands. It features interactive scatter plots showing individual data points over time, and highly legible salary tables.
-*   **Location and Cost-of-Living (CoL) Adjustments:**
-    Excellent localized drilldown. It groups data into metropolitan areas (e.g., SF Bay Area, NYC, Bangalore) and provides a dedicated "Compare Cities" tool that utilizes cost-of-living indices to show equivalent purchasing power.
-*   **Comparison Features:**
-    Enables side-by-side comparisons of two or more companies across salary, benefits, levels, and equity structure. Includes interactive line charts and bar graphs for historical trends.
-*   **Mobile Experience Quality:**
-    Highly polished, responsive mobile web design and lightweight native mobile applications. Tables are swipeable or collapse into card-based views on mobile screens to preserve readability.
-*   **Data Freshness Indicators:**
-    Individual entries are stamped with exact submission dates. The platform displays real-time tickers of new entries and computes averages based on the last 12 months of submissions to prevent outdated historical records from skewing current market rates.
-*   **Notable UX Failures & Frustrations:**
-    *   **Level Fragmentation:** When users submit data under non-standard titles, it can lead to cluttered, unmapped entries that fall outside the main comparison ladder.
-    *   **Visual Noise:** The homepage has grown increasingly complex, integrating job boards, negotiation consulting, and internship rankings, which can distract from the core salary search.
+*   **What they do exceptionally well:**
+    1.  **Pioneered Level Mapping Matrix**: Side-by-side mapping of company levels (e.g., Google L5 vs. Meta E5 vs. Microsoft 63) completely demystifies title variances.
+    2.  **Granular Compensation Split**: Successfully separated total compensation into Base Salary, Annual Stock/RSU Grant Value, and Annual Bonus.
+    3.  **High-Density Scatter Plot**: Displays individual anonymous records as interactive nodes on a coordinate map mapping Total Comp against YoE.
+    4.  **Premium Geolocation Clusters**: Groups data into realistic localized urban talent hubs (e.g., SF Bay Area, Bangalore Urban, London) instead of flat, country-wide generalizations.
+*   **What they get wrong or miss:**
+    1.  **Product Congestion & Visual Noise**: The homepage has grown heavily cluttered with jobs boards, negotiation consulting ads, and non-core rankings.
+    2.  **Static Progression Representations**: Career ladder diagrams are static maps that do not dynamically sync or filter with search queries.
+    3.  **Poor Accessibility Standards**: Key interactive charts and dense tables do not support standard keyboard controls or screen reader cues.
+    4.  **Skewed Representation**: Heavily prioritizes US West Coast tech Hubs, leading to fragmented, lower-quality representation of EMEA/APAC remote scales.
+*   **Key UX patterns worth adopting:**
+    *   **Side-by-Side Comparison Tables**: Enables easy mapping of parallel role slots.
+    *   **Highlighting Medians**: Prioritizing 50th percentile values over easily-skewed mathematical averages.
+*   **Key UX anti-patterns to avoid:**
+    *   **Marketing Clutter**: Avoid plastering negotiation coaching banners, resume-writing packages, and ads over the core data workspace.
 
 ---
 
 ### 📈 6figr
-*Career Trajectory Prediction & Mid-to-Senior Executive Benchmarking*
+*An aggregator focused on corporate career pathing and executive compensation benchmarks.*
 
-*   **Core Positioning:**
-    Focused on professional career growth, career path prediction, and compensation benchmarks for mid-to-senior levels (particularly strong in India and the US, covering finance, tech, and engineering operations).
-*   **Compensation Structure:**
-    Captures **Base Salary**, **Variable Pay (bonuses/commissions)**, and **Benefits**. It is less detailed regarding complex equity structures (like RSU vesting variations, refreshers, and option valuations), often aggregating them into standard "variable" components.
-*   **Level System:**
-    Relies heavily on raw job titles and designations (e.g., "Associate Director", "Vice President"). It attempts to map these into broad career stages (e.g., Entry, Mid, Senior, Lead, Executive) but lacks a fine-grained, interactive cross-company normalization grid like Levels.fyi.
-*   **Filtering and Search UX Patterns:**
-    Features search mechanisms geared around career paths and resumes. Users can filter by company, location, title, and years of experience. The overall layout is dense, text-heavy, and relies heavily on static forms.
-*   **Location and Cost-of-Living Adjustments:**
-    Standard location-based aggregates (e.g., average salary for a role in London vs. Mumbai). It lacks an interactive, real-time cost-of-living purchasing power converter.
-*   **Comparison Features:**
-    Focuses on "Career Paths" (showing the probability of moving from Company A to Company B) and peer percentiles. Lacks simple, side-by-side leveling maps and benefit breakdown comparisons.
-*   **Mobile Experience Quality:**
-    Suboptimal mobile web experience. Pages are heavily cluttered with aggressive advertisements, sticky banners, and tables that require excessive horizontal scrolling without responsive wrapping.
-*   **Data Freshness Indicators:**
-    Lacks prominent real-time indicators. Many data aggregates feel historical, and the exact timestamps of individual entries are obscured, making it difficult to assess how well they reflect current inflationary job markets.
-*   **Notable UX Failures & Frustrations:**
-    *   **Aggressive Gating / Paywalls:** Forces users to register, upload a resume, or complete lengthy surveys to see deep insights or unlock comparisons.
-    *   **Ad Clutter:** Heavy ad integration distracts from data consumption and significantly harms mobile performance.
-    *   **Outdated Visual Aesthetics:** The design relies on old form layouts, plain system fonts, and generic colors, creating a low-trust environment.
+*   **What they do exceptionally well:**
+    1.  **Career Path Mapping**: Visualizes the probability of career transitions (e.g., percentage of professionals migrating from Oracle to Amazon).
+    2.  **Breadth of Roles**: Covers traditional operations, finance, and engineering management outside of high-tech firms.
+    3.  **Peer Percentile Benchmarking**: Compares a user's uploaded profile against peers in the same demographic segment.
+*   **What they get wrong or miss:**
+    1.  **Aggressive Form Walls & Gatekeeping**: Force users to register, complete long surveys, or upload W2s/Resumes before viewing general statistics.
+    2.  **Intrusive Advertising**: Aggressive pop-ups, flashing banners, and sticky panels severely compromise system performance and visual trust.
+    3.  **Flat Level Systems**: Lacks interactive leveling grids, relying on raw job titles which are highly prone to corporate inflation.
+    4.  **Obscured Timestamps**: Does not present submission dates on individual listings, making it impossible to assess inflation adjustments.
+*   **Key UX patterns worth adopting:**
+    *   **Percentile Ranking Widgets**: Clear circular dials highlighting where a user sits in their market bracket.
+*   **Key UX anti-patterns to avoid:**
+    *   **Registration Gates**: Demanding sensitive W2s/resumes just to run a simple, initial salary query.
 
 ---
 
 ### 🏢 AmbitionBox
-*The Indian Market Powerhouse for Reviews and Cost-to-Company (CTC)*
+*The dominant employee reviews and Cost-to-Company (CTC) database in the Indian corporate market.*
 
-*   **Core Positioning:**
-    A comprehensive career platform (under Info Edge / Naukri) tailored specifically for the Indian job market. It surfaces employee reviews, interview experiences, office photos, and aggregate salary insights across all major Indian industries.
-*   **Compensation Structure:**
-    Focuses heavily on the Indian standard of **CTC (Cost to Company)**. It highlights the total annual CTC and provides a breakdown of **Fixed Pay (Base)** and **Variable Pay**. However, it is structurally weak at handling US-style high-growth equity (RSUs/Stock Options), reflecting traditional Indian corporate packages.
-*   **Level System:**
-    Mainly utilizes raw company-specific job titles. It aggregates salary data by experience bands (e.g., 2-5 years of experience for a "Software Engineer") rather than offering an interactive, normalized leveling ladder.
-*   **Filtering and Search UX Patterns:**
-    Robust auto-complete search for Indian corporate entities. Users can filter salaries by department, years of experience, and location (metro/tier-2 cities in India). Results are displayed using clear percentile curves and bell graphs.
-*   **Location and Cost-of-Living Adjustments:**
-    Excellent geographical coverage of Indian tier-1, 2, and 3 cities. It does not provide dynamic cost-of-living adjustment calculators, but does list location-specific averages for the same role side-by-side.
-*   **Comparison Features:**
-    Provides a solid, high-level comparison tool where users can select two companies and compare their overall star ratings, salary averages, and employee-rated benefits (e.g., work-life balance, job security).
-*   **Mobile Experience Quality:**
-    High-quality, polished mobile web implementation and highly rated native mobile apps. Page layouts are clean, fonts are highly legible, and complex charts are refactored into simple, touch-friendly components.
-*   **Data Freshness Indicators:**
-    Displays indicators such as "Calculated from X reviews received in the last 1 year". It marks the date range of data aggregation clearly, ensuring users understand the relevance of the average salary figures.
-*   **Notable UX Failures & Frustrations:**
-    *   **CTC Component Ambiguity:** Indian CTC includes non-cash items (gratuity, employer PF contributions, insurance). The platform does not sufficiently isolate real cash-in-hand from these paper benefits.
-    *   **Contribution Walls:** Users are frequently prompted to submit their own salary or review to unlock full company details, interrupting the search flow.
+*   **What they do exceptionally well:**
+    1.  **Deep Localized Coverage**: Provides extensive database depth across Tier-1, Tier-2, and Tier-3 Indian IT corridors.
+    2.  **Bell-Curve Distribution Graphs**: Renders simple, attractive SVG salary curves that easily outline average, low, and high salaries.
+    3.  **Company Perks & Benefits Ratings**: Employee ratings are categorized into transparent sub-indices (e.g., Job Security, Work-Life Balance, Office Culture).
+*   **What they get wrong or miss:**
+    1.  **Indian CTC Ambiguity**: Blurs the line between cash-in-hand salary and paper additions (gratuity, provident fund, medical insurance), leading to skewed "inflated" compensation numbers.
+    2.  **Equity Ignorance**: Structurally weak at modeling high-growth tech equity vesting structures, combining stock options and standard RSUs under vague "variable play".
+    3.  **Forced Review Prompt Loops**: Constant contribution blocks disrupt browsing, causing users to submit placeholder values to bypass the block.
+    4.  **No Title Normalization**: Relies entirely on company-specific designations, making comparisons between startups and MNCs confusing.
+*   **Key UX patterns worth adopting:**
+    *   **Simple Category Ratings**: Breakdowns of company stats into Work-Life Balance, Perks, and Salary.
+*   **Key UX anti-patterns to avoid:**
+    *   **Forced Survey Blocks**: Intrusive prompt boxes that lock user interaction after 3 clicks.
 
 ---
 
 ### 🌐 Glassdoor
-*The Global Workplace Review & Broad-Scale Salary Database*
+*The global standard for employee reviews, company culture ratings, and generalized salary database.*
 
-*   **Core Positioning:**
-    The global standard for broad workplace reviews, company culture ratings, interview preparation, and aggregated salaries across all industries (non-tech and tech alike).
-*   **Compensation Structure:**
-    Displays **Base Pay** and **Additional Pay** (which merges bonuses, profit sharing, commission, and stock bonuses). It lacks granular details on equity vesting schedules, paper wealth calculations for startups, or refresher grants.
-*   **Level System:**
-    Uses raw job titles submitted by users. Because it caters to every industry (from retail to high finance), it does not have a normalized technical leveling system, leading to confusing overlaps (e.g., "Senior Software Engineer" representing widely different scopes across companies).
-*   **Filtering and Search UX Patterns:**
-    Features highly mature search inputs with global auto-complete. Filters include company size, industry, location, years of experience, and job function. However, the search experience is increasingly integrated with "Fishbowl" style community forums, which can make locating straight salary facts harder.
-*   **Location and Cost-of-Living Adjustments:**
-    Deep global database covering hundreds of countries and regional hubs. It lacks a dynamic purchasing power or tax-adjusted cost-of-living tool within its salary dashboard.
-*   **Comparison Features:**
-    Enables comparison between two companies, but the comparison is heavily focused on corporate culture ratings (e.g., CEO approval, career opportunities, work-life balance) rather than detailed salary, level, or equity metrics.
-*   **Mobile Experience Quality:**
-    Polished responsive mobile web and native apps. However, the mobile web experience is severely compromised by aggressive prompts forcing users to install the native app to view reviews and salaries.
-*   **Data Freshness Indicators:**
-    Uses proprietary algorithmic models to estimate "current market value" salaries. While this aggregates historical data, it obscures the actual date of individual submissions, making it difficult to verify real-time market shifts.
-*   **Notable UX Failures & Frustrations:**
-    *   **Intrusive Gatekeeping:** Highly aggressive contribution blocks. Users must submit a review or salary every 12 months to maintain access, which encourages low-quality "junk" data submissions just to bypass the wall.
-    *   **Averaging Out Tech Spikes:** Glassdoor’s algorithmic averaging often lumps top-tier tech firms with traditional firms, under-representing the extreme compensation heights (particularly in equity) of high-growth tech companies.
-    *   **Forum Clutter:** The shift towards community-driven forum cards ("Fishbowl") makes the UI feel busy, confusing users who just want quick, structured salary metrics.
+*   **What they do exceptionally well:**
+    1.  **Search Autocomplete & SEO**: High-discovery landing pages with excellent auto-completion for thousands of global enterprises.
+    2.  **Company Interview Guides**: Crowdsourced interview questions mapped to specific job roles and results.
+    3.  **Comprehensive Filter Panels**: Advanced segmenting by company size, global sector, revenue, and geographical hubs.
+*   **What they get wrong or miss:**
+    1.  **Compensation Under-representation**: Their algorithmic averaging lumps premium high-tech engineering equity structures with traditional operations pay, significantly understating actual tech compensation.
+    2.  **Forced Native App Interstitials**: The mobile web view is heavily obstructed by "Open in App" popups, disrupting mobile exploration.
+    3.  **Community Clutter**: Integration of "Fishbowl" social cards makes page hierarchies noisy and distracts from hard data points.
+    4.  **Vague "Additional Pay" Category**: Merges stock, cash bonuses, and commissions, making detailed offer comparison impossible.
+*   **Key UX patterns worth adopting:**
+    *   **Fuzzy-Search Inputs**: Graceful suggestion dropdowns handling typos and alternate names.
+*   **Key UX anti-patterns to avoid:**
+    *   **Aggressive App Store Redirection**: Blocking user scrolling on mobile browsers to force native app downloads.
 
 ---
 
-## 2. Feature Footprint Comparison Table
+## Feature Comparison Table
 
-Below is a direct comparison of the key features across all four platforms, followed by our planned implementation decisions for **LevelLens**.
+Below is a detailed engineering footprint audit of the key features of the four main platforms, and the implementation choices built into **LevelLens**:
 
-| Feature | Levels.fyi | 6figr | AmbitionBox | Glassdoor | LevelLens (Build?) |
-| :--- | :---: | :---: | :---: | :---: | :--- |
-| **Level Normalization** | ✅ Yes | ❌ No | ❌ No | ❌ No | **✅ Yes (Priority 1)** — Direct cross-company leveling matrix for clear mapping. |
-| **Cost-of-Living (CoL) Adjustment** | ✅ Yes | ❌ No | ❌ No | ❌ No | **✅ Yes (Priority 1)** — Tax and purchasing power adjusted comparison engine. |
-| **Equity Breakdown (RSUs/Options)** | ✅ Yes | ❌ No | ❌ No | ❌ No | **✅ Yes (Priority 1)** — Detailed vesting schedules, growth projections, and cash equivalents. |
-| **Anonymous Submissions** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes | **✅ Yes** — Safe, encrypted, fully anonymous reporting with verified backend hooks. |
-| **Verified Data Badges** | ✅ Yes | ❌ No | ❌ No | ❌ No | **✅ Yes (Priority 2)** — Verify uploads via paystubs/W2s/Offers with anonymized storage. |
-| **Company Profile Pages** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes | **✅ Yes** — Clean, high-impact profiles focused on core salary distributions. |
-| **Searchable Salary Tables** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes | **✅ Yes (Priority 1)** — Instant, multi-column sorting and fuzzy search. |
-| **Percentile Bands** | ❌ No | ✅ Yes | ✅ Yes | ✅ Yes | **✅ Yes** — Interactive box-and-whisker plots showing 25th, 50th, 75th, and 90th percentiles. |
-| **Years of Experience (YoE) Filters** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes | **✅ Yes (Priority 1)** — Separate sliders for Total YoE vs. Company-specific YoE. |
-| **Role Filters** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes | **✅ Yes** — Deep categorizations within tech (e.g., Backend, Frontend, DevOps, AI/ML). |
-| **Location Filters** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes | **✅ Yes** — Country, Metro Area, Specific City, and Remote-specific filters. |
-| **Side-by-Side Comparison** | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes | **✅ Yes (Priority 1)** — Comparative metrics for salary, level matching, and benefits. |
-| **Career Ladder View** | ✅ Yes | ❌ No | ❌ No | ❌ No | **✅ Yes (Priority 2)** — Interactive progression maps (e.g., path from Junior to Staff). |
-| **Export / Share Tools** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes (Priority 2)** — One-click export to CSV/JSON and clean social share cards. |
-| **Mobile Responsiveness** | ✅ Yes | ⚠️ Poor | ✅ Yes | ✅ Yes | **✅ Yes (Priority 1)** — Adaptive layouts designed first-class for mobile devices. |
-
----
-
-## 3. Design Decisions: Core UX Principles for LevelLens
-
-Based on the critical gaps identified in the competitive landscape, LevelLens will be built upon these **5 defining UX principles**:
-
-### 1. Frictionless Transparency over Contribution Walls (Anti-Gatekeeping)
-> [!IMPORTANT]
-> **The Problem:** Glassdoor and AmbitionBox severely degrade the user experience by forcing contributions (salary details or reviews) through aggressive overlay walls. This often results in "junk" data submitted by users just trying to read a single page.
->
-> **The Decision:** LevelLens will prioritize open access. A high-value tier of aggregate statistics, salary distributions, and leveling matrices will be completely open and un-gated. Verification and contribution badges will be encouraged through positive reinforcement (unlocking premium personalized tools, like stock portfolio tracking or mock negotiation simulators) rather than holding basic data hostage.
-
-### 2. Multi-Company Level Normalization as a First-Class Citizen
-> [!TIP]
-> **The Problem:** Glassdoor and AmbitionBox display raw titles, leading to massive confusion when mapping an "L5 Senior Engineer" at Google to a "Member of Technical Staff" at Salesforce.
->
-> **The Decision:** Every salary page and search interaction in LevelLens will revolve around a standardized, normalized career grid. Users will be able to toggle between "Raw Title" and "Normalized Level" (e.g., LevelLens Level 3 = Entry, Level 5 = Senior, Level 7 = Principal). This normalization engine will be highly visible on all search, profile, and comparison pages.
-
-### 3. Clear & Interactive Compensation Decomposition
-> [!NOTE]
-> **The Problem:** AmbitionBox lumps everything into CTC, making it hard to identify actual cash-in-hand. Glassdoor obscures equity into "Additional Pay." Levels.fyi has excellent data but lacks interactive projections for equity fluctuations.
->
-> **The Decision:** LevelLens will feature a highly visual, interactive compensation breakdown widget. It will isolate **Base Pay**, **Guaranteed Bonus**, **Variable/Performance Bonus**, and **Equity (RSUs/Options)**. It will include a slider allowing candidates to project their total earnings based on potential stock growth rates (e.g., -20% to +50%) and custom vesting schedules (e.g., 25% yearly vs. frontloaded).
-
-### 4. Dynamic Purchasing Power & Localized Tax Adjuster
-> [!IMPORTANT]
-> **The Problem:** Tech professionals frequently migrate or work remotely, but current tools only provide flat comparisons of city averages without factoring in cost-of-living indexes, localized tax brackets, and local perks.
->
-> **The Decision:** We will build a native **Purchasing Power Converter** directly into our comparison pages. When comparing an offer in San Francisco with one in Bangalore or Munich, LevelLens will automatically calculate estimated local income taxes and apply a Purchasing Power Parity (PPP) index. This will show users their actual disposable income equivalent in their home currency.
-
-### 5. High-Signal, Dark-First Minimalist Dashboard (Zero Ad-Spam)
-> [!CAUTION]
-> **The Problem:** 6figr is rendered almost unusable due to flashing ads, and Glassdoor’s integration with forums creates cognitive overload, detracting from core salary analysis.
->
-> **The Decision:** LevelLens will feature a premium, dark-mode-first aesthetic with zero ad-spam. We will prioritize high data density with high visual clarity—using clean typography, subtle borders, box-and-whisker plots, and micro-interactions (e.g., hovering over a chart node dynamically updates an adjacent breakdown card). The focus remains entirely on rapid salary exploration.
+| Feature | Levels.fyi | 6figr | AmbitionBox | Glassdoor | We Build? | LevelLens Implementation / Approach |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Level Normalization** | ✅ Yes | ❌ No | ❌ No | ❌ No | **✅ Yes** | Standardized cross-company leveling matrix (Intern to Exec). |
+| **Equity Breakdown (RSUs)** | ✅ Yes | ❌ No | ❌ No | ❌ No | **✅ Yes** | Isolated Base, Bonus, and annualized Stock split cards. |
+| **Frictionless Open Access** | ✅ Yes | ❌ No | ❌ No | ❌ No | **✅ Yes** | No paywalls or contribution barriers to see market medians. |
+| **Verified Data Badges** | ✅ Yes | ❌ No | ❌ No | ❌ No | **✅ Yes** | Paystub/offer letter verification badges ("unverified" vs "verified"). |
+| **Shareable URL Query States** | ⚠️ Poor | ❌ No | ❌ No | ❌ No | **✅ Yes** | Complete search/filters fully encoded in URLs via `nuqs`. |
+| **Mobile Keyboard Bailing** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes** | Sticky layouts adapt dynamically using the `visualViewport` API. |
+| **Fuzzy Company Autocomplete** | ✅ Yes | ⚠️ Poor | ✅ Yes | ✅ Yes | **✅ Yes** | Submission autocomplete utilizing high-signal mock company indices. |
+| **Keyboard Accessibility** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes** | Complete arrow key navigation and focus traps (WCAG 2.1 AA). |
+| **Box Plot Percentiles** | ❌ No | ✅ Yes | ✅ Yes | ✅ Yes | **✅ Yes** | Multi-level range charts showing 25th, 50th, 75th percentiles. |
+| **Single Report (n=1) Safety** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes** | Percentiles hide for n=1, showing a custom disclaimer. |
+| **"No-Data" (n=0) Rungs** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes** | Empty levels render with a dotted line and custom skeletons. |
+| **Zustand Shareable Compare** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes** | Comparisons parsed directly into URL params (`slots=...`). |
+| **Empty State Heatmaps** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes** | Cells with insufficient reports show an explicit dash (`–`). |
+| **Premium Dark Mode** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes** | Custom `.dark` theme using tailored CSS variable palettes. |
+| **Compact Table Virtualizer** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes** | TanStack virtualization renders 500+ rows at 60 FPS. |
+| **YoE Separation** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes | **✅ Yes** | Breakdown sliders for Company YoE vs. Total YoE. |
+| **Fuzzy Role Categorization** | ✅ Yes | ⚠️ Poor | ✅ Yes | ✅ Yes | **✅ Yes** | High-level groupings (Engineering, Product, Design, Data). |
+| **Side-by-Side Table** | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes | **✅ Yes** | Side-by-side slot compares with clean removal triggers. |
+| **Command Palette Search** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes** | Globally accessible popup finder via `⌘K` keyboard listener. |
+| **High-Contrast Focus Rings** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes** | Keyboard focus maps a 3:1 contrast visible ring on outline nodes. |
+| **Screen Reader Landmarks** | ❌ No | ❌ No | ⚠️ Poor | ⚠️ Poor | **✅ Yes** | Full semantic markup with descriptive ARIA live announcements. |
+| **Safe Cross-Currency Convert** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes** | Dynamic conversion rates with fallback `"N/A"` outputs. |
+| **Duplicate Compare Toast** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes** | Sonner toast blocks identical role slot comparisons. |
+| **Self-Reported State Sync** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes** | Instant state store hydration displaying "unverified" badges. |
+| **Segment-Level Skeletons** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes** | Individual page shimmers prevent jarring layout shifts. |
+| **Text Truncation Tooltips** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes** | Full text displays in clean tooltips for long company names/roles. |
+| **Mobile Drawer Sizing** | ❌ No | ❌ No | ❌ No | ❌ No | **✅ Yes** | Drawers size cleanly using `visualViewport` height parameters. |
 
 ---
 
-## 4. Proposed Data Structure (JSON) for Unified Levels
-To support these design decisions, LevelLens will utilize a normalized schema. Below is a blueprint of how compensation data will be modeled within the platform:
+## Key Insights
 
-```json
-{
-  "submissionId": "ll_sub_987214",
-  "timestamp": "2026-05-29T11:15:30Z",
-  "company": {
-    "name": "Acme Corp",
-    "normalizedId": "acme_corp"
-  },
-  "role": {
-    "rawTitle": "Senior Systems Engineer III",
-    "normalizedTrack": "Software Engineer",
-    "normalizedLevel": 5
-  },
-  "location": {
-    "city": "Bangalore",
-    "metroArea": "Bangalore Urban",
-    "country": "India",
-    "isRemote": false
-  },
-  "experience": {
-    "totalYoE": 7.5,
-    "companyYoE": 2.0
-  },
-  "compensation": {
-    "currency": "INR",
-    "annualBase": 3200000,
-    "annualBonus": 480000,
-    "equity": {
-      "type": "RSU",
-      "totalValueGranted": 4000000,
-      "vestingPeriodYears": 4,
-      "vestingSchedule": "25/25/25/25",
-      "annualizedValue": 1000000
-    },
-    "calculatedAnnualTotal": 4680000
-  },
-  "verification": {
-    "isVerified": true,
-    "method": "paystub_ocr",
-    "verifiedDate": "2026-05-29T11:18:00Z"
-  }
-}
-```
+1.  **Friction Over Access Breeds Bad Data**
+    > **Insight 1**: Platforms that force users to submit reviews or salaries to access data encourage low-quality "junk" entries. → **LevelLens** maintains completely open, un-gated market medians, incentivizing verification only to unlock advanced features like negotiation toolkits.
 
-This research establishes a clear direction for LevelLens. By avoiding the UX failures of legacy platforms and committing to transparency, normalization, and deep financial clarity, LevelLens is positioned to become the premier career intelligence tool.
+2.  **Title Inflation Obscures Fair Value**
+    > **Insight 2**: Standardizing by company-specific designations leads to immense confusion across corporate lines. → **LevelLens** positions normalized levels (e.g., L3, L5, L7) as first-class, searchable entities, giving users a common metric to align scope.
+
+3.  **Aggressive Mobile Ad-Spam Ruins Trust**
+    > **Insight 3**: Cluttering visual real estate with sticky ads and app redirect interstitials damages trust. → **LevelLens** adopts a minimalist, ad-free, dark-first premium design that keeps the focus entirely on high data density.
+
+4.  **Static Averages Misrepresent Tech Compensation**
+    > **Insight 4**: Standard calculations of mean averages under-represent high-growth equity structures. → **LevelLens** uses median-focused math and distinct Base/Bonus/Equity breakdowns on every profile.
+
+5.  **Virtual Keyboards Disrupt Sticky Interfaces**
+    > **Insight 5**: Fixed bottom navigations and drawers collide with virtual keyboards on mobile viewports. → **LevelLens** implements `visualViewport` event listeners, sliding the nav bar out of view and sizing popups to the visible screen space.
+
+6.  **Averages Skew Singleton Datasets (n=1)**
+    > **Insight 6**: Standard box plots and percentile ranges are mathematically invalid and visually confusing when representing a single data point. → **LevelLens** intercepts `n=1` cohorts, hiding range bars and displaying a custom, muted disclaimer: *"Based on 1 self-reported report"*.
+
+7.  **Duplicate Compare Slots Breed Noise**
+    > **Insight 7**: Accidentally selecting duplicate slots in comparison matrices clutters the UI and wastes slots. → **LevelLens** blocks identical entries in `useComparisonStore.ts` and alerts users via a Sonner warning toast.
+
+---
+
+## Design Decisions
+
+1.  **Dark-Mode-First Premium Design**: Tailored HSL values (near-black `#0F0F0F` background, `#1A1A1A` cards) rather than basic inverted colors, creating a high-trust, terminal-like workspace.
+2.  **Levels-First Normalization**: Normalizes all crowdsourced titles to a standard career rung, resolving title fragmentation.
+3.  **Percentile-Centric Visualizations**: Replaced mathematical means with 25th, 50th, and 75th percentiles to block skewed outlier calculations.
+4.  **No-Gatekeeping Access**: All market averages and level charts are accessible with zero survey walls.
+5.  **Dynamic URL State Shareability**: Syncs filter panel inputs directly into URL query parameters via `nuqs`, enabling one-click reproduction of the exact viewport.
+6.  **Frictionless Mobile Sizing**: Uses visual viewport height hooks on drawers to ensure bottom buttons are never obscured.
+7.  **Dotted Connection for Missing Levels**: Empty levels in the progression ladder remain visible but render as a vertical dashed connector to showcase career hierarchy.
+8.  **Singleton Safety (n=1)**: Conditionally hides range whiskers for single-report cohorts, showing only the lone value and an explicit footnote.
+9.  **Safe Exchange Conversion**: Safe currency wrappers that output `"N/A"` in the UI if rates are missing or conversion variables fail, preventing layout crashes.
+10. **Duplicate Compare Blockers**: Intercepts slot selection to prevent comparison of identical roles, alerting the user via Sonner.
+
+---
+
+## Frontend Architecture Decisions
+
+### 1. Next.js App Router (React Server Components)
+*   **Rationale**: Server components execute data aggregation and initial HTML generation on the server, ensuring rapid page loads and optimized SEO templates.
+*   **Tradeoff**: Demands strict separation of server/client code (e.g. adding `"use client"` directives for interactive components), slightly increasing state-management overhead.
+
+### 2. URL State Sync via `nuqs`
+*   **Rationale**: Bypasses traditional router push operations, allowing shallow, non-blocking URL parameters sync that keeps filters completely shareable.
+*   **Tradeoff**: Extensive parameter parsing can result in long URLs (e.g. `?levels=SENIOR,STAFF&roles=swe`), but this is a worthy tradeoff for perfect state recovery.
+
+### 3. TanStack Table (`@tanstack/react-table`)
+*   **Rationale**: Headless table architecture separates sorting, selection, and filtering logic from the UI layer, giving us absolute freedom over CSS styling and mobile responsiveness.
+*   **Tradeoff**: Requires boilerplate setup compared to fully styled UI tables, but enables pristine bespoke implementation.
+
+### 4. TanStack Virtual (`@tanstack/react-virtual`)
+*   **Rationale**: Instead of paginating or rendering hundreds of heavy DOM nodes, virtual scrolling renders only the visible rows, guaranteeing smooth 60 FPS rendering on massive data tables.
+*   **Tradeoff**: Requires fixed row heights and absolute positioning hooks, slightly increasing initial container styling complexity.
+
+### 5. Recharts for Visualizations
+*   **Rationale**: Recharts uses React component structures to build SVGs, making custom theme overrides and responsive grid rendering easy.
+*   **Tradeoff**: Heavier than canvas-based alternatives, but perfect for rendering highly responsive, accessible corporate charts.
+
+### 6. Zustand for Client-Side Global State Management
+*   **Rationale**: Lightweight, hook-based state store that avoids Redux boilerplate and matches perfectly with server hydration.
+*   **Tradeoff**: Requires manual synchronization with URLs for shared comparison slots, which we resolved cleanly using bidirectional `useEffect` syncer blocks.
+
+---
+
+## What I Would Build Next
+
+1.  **Automated Paystub/Offer Letter Verification Engine (OCR)**:
+    Implement an AI-powered upload parser. Using secure, client-side OCR, candidates can upload paystubs, W2s, or PDF offer letters. The system will automatically scrape relevant figures, redact personal information, and mark the listing with a verified badge.
+2.  **Interactive Equity Vesting & Stock Projection Simulator**:
+    A premium client-side chart where candidates can toggle stock vesting formats (e.g., standard 25% annual vs. frontloaded 33% Meta-style vs. ByteDance monthly) and project growth curves based on real-time stock ticker market shifts.
+3.  **Local Income Tax & Purchasing Power Bracket Estimator**:
+    Build a dynamic engine that computes localized income taxes (federal, state, municipal, and cess) and cost-of-living index offsets, showing candidates their actual cash-in-pocket purchasing equivalence when comparing global offers.
+4.  **Global Remote-Work Salary Alignment Map**:
+    A geographic benchmarking dashboard showing remote compensation scales mapped against regional talent hubs, helping remote engineers identify pay premiums and locate employers with borderless hiring contracts.
