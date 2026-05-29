@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useComparisonStore } from "@/lib/hooks/useComparisonStore";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
 import { MOCK_COMPANIES } from "@/lib/data/mock/companies";
-import { getPercentileBand, formatCurrency } from "@/lib/formatters";
+import { getPercentileBand, formatCurrency, getLevelBadgeVariant, getLevelColor } from "@/lib/formatters";
 import { ComparisonSlot, NormalizedLevel } from "@/types";
 import { PageShell } from "@/components/layout/PageShell";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -193,7 +193,7 @@ export function CompareView() {
                     <div className="min-w-0">
                       <p className="font-semibold truncate">{s.companyName}</p>
                       <p className="text-sm text-muted-foreground truncate">{s.role}</p>
-                      <Badge variant="secondary" className="mt-1 text-[10px]">
+                      <Badge variant={getLevelBadgeVariant(s.level)} className={cn("mt-1 text-[10px] uppercase font-semibold", getLevelColor(s.level))}>
                         {s.level}
                       </Badge>
                     </div>

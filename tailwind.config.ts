@@ -45,8 +45,10 @@ const config: Config = {
           foreground: "var(--destructive-foreground)",
         },
         brand: {
-          primary: "var(--brand-primary)",
-          accent: "var(--brand-accent)",
+          primary: "hsl(var(--brand-primary))",
+          "primary-hover": "hsl(var(--brand-primary-hover))",
+          "primary-foreground": "hsl(var(--brand-primary-foreground))",
+          accent: "hsl(var(--brand-accent))",
         },
         surface: "var(--surface)",
         sidebar: "var(--sidebar)",

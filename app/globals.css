@@ -29,6 +29,8 @@
     
     /* LevelLens Custom Palette - Light Mode */
     --brand-primary: 214 100% 45%; 
+    --brand-primary-hover: 214 100% 38%;
+    --brand-primary-foreground: 0 0% 100%;
     --brand-accent: 174 85% 42%;
     --surface: 0 0% 100%;
     --sidebar: 210 40% 98%;
@@ -73,6 +75,8 @@
 
     /* LevelLens Custom Palette - Dark Mode */
     --brand-primary: 217 91% 60%;
+    --brand-primary-hover: 217 91% 52%;
+    --brand-primary-foreground: 0 0% 5.9%;
     --brand-accent: 174 90% 48%; /* Slightly brighter/vibrant */
     --surface: 0 0% 10.2%;
     --sidebar: 0 0% 7.8%; /* #141414 */

@@ -136,9 +136,9 @@ export function FilterPanel() {
                     type="button"
                     onClick={() => handleLevelToggle(level)}
                     className={cn(
-                      "flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all duration-200 active:scale-97 select-none",
+                      "flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all duration-200 active:scale-95 select-none",
                       isSelected 
-                        ? "border-brand-primary/40 bg-brand-primary/8 text-brand-primary hover:bg-brand-primary/12 font-semibold shadow-xs" 
+                        ? "border-brand-primary/40 bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/15 font-semibold shadow-sm" 
                         : "border-border/60 hover:bg-muted text-muted-foreground hover:text-foreground"
                     )}
                   >
@@ -188,7 +188,7 @@ export function FilterPanel() {
                       className={cn(
                         "flex items-center w-full px-2 py-1.5 rounded-md text-xs transition-colors text-left select-none",
                         isSelected 
-                          ? "bg-brand-primary/8 text-brand-primary font-medium" 
+                          ? "bg-brand-primary/10 text-brand-primary font-medium" 
                           : "hover:bg-muted text-foreground/90"
                       )}
                     >
@@ -247,7 +247,7 @@ export function FilterPanel() {
                       className={cn(
                         "flex items-center w-full px-2 py-1.5 rounded-md text-xs transition-colors text-left select-none",
                         isSelected 
-                          ? "bg-brand-primary/8 text-brand-primary font-medium" 
+                          ? "bg-brand-primary/10 text-brand-primary font-medium" 
                           : "hover:bg-muted text-foreground/90"
                       )}
                     >
@@ -385,7 +385,7 @@ export function FilterPanel() {
                     variant={isSelected ? "default" : "outline"} 
                     size="sm" 
                     className={cn(
-                      "text-[10px] h-7.5 font-medium rounded-lg transition-all",
+                      "text-[10px] h-8 font-medium rounded-lg transition-all",
                       isSelected && "shadow-xs bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-foreground"
                     )}
                     onClick={() => setFilters({ minComp: preset.min, maxComp: preset.max })}

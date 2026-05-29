@@ -320,59 +320,71 @@ export function SalaryTable({
       {
         accessorKey: "baseSalary",
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="-ml-3 h-8"
-            onClick={() => handleColumnSort(column)}
-          >
-            Base
-            <ArrowUpDown className="ml-1.5 h-3 w-3" />
-          </Button>
+          <div className="flex justify-end w-full pr-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="-mr-3 h-8"
+              onClick={() => handleColumnSort(column)}
+            >
+              Base
+              <ArrowUpDown className="ml-1.5 h-3 w-3" />
+            </Button>
+          </div>
         ),
         cell: ({ row }) => (
-          <span className="text-sm">
-            {formatCurrency(
-              row.getValue<number>("baseSalary"),
-              row.original.currency,
-              true
-            )}
-          </span>
+          <div className="text-right pr-4">
+            <span className="text-sm">
+              {formatCurrency(
+                row.getValue<number>("baseSalary"),
+                row.original.currency,
+                true
+              )}
+            </span>
+          </div>
         ),
         size: 100,
       },
       {
         accessorKey: "stockPerYear",
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="-ml-3 h-8"
-            onClick={() => handleColumnSort(column)}
-          >
-            Stock/yr
-            <ArrowUpDown className="ml-1.5 h-3 w-3" />
-          </Button>
+          <div className="flex justify-end w-full pr-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="-mr-3 h-8"
+              onClick={() => handleColumnSort(column)}
+            >
+              Stock/yr
+              <ArrowUpDown className="ml-1.5 h-3 w-3" />
+            </Button>
+          </div>
         ),
         cell: ({ row }) => {
           const val = row.getValue<number>("stockPerYear");
           return (
-            <span className="text-sm text-muted-foreground">
-              {val > 0 ? formatCurrency(val, row.original.currency, true) : "—"}
-            </span>
+            <div className="text-right pr-4">
+              <span className="text-sm text-muted-foreground">
+                {val > 0 ? formatCurrency(val, row.original.currency, true) : "—"}
+              </span>
+            </div>
           );
         },
         size: 100,
       },
       {
         accessorKey: "bonus",
-        header: "Bonus",
+        header: () => (
+          <div className="text-right pr-4 w-full text-xs font-semibold">Bonus</div>
+        ),
         cell: ({ row }) => {
           const val = row.getValue<number>("bonus");
           return (
-            <span className="text-sm text-muted-foreground">
-              {val > 0 ? formatCurrency(val, row.original.currency, true) : "—"}
-            </span>
+            <div className="text-right pr-4">
+              <span className="text-sm text-muted-foreground">
+                {val > 0 ? formatCurrency(val, row.original.currency, true) : "—"}
+              </span>
+            </div>
           );
         },
         size: 90,
@@ -380,34 +392,42 @@ export function SalaryTable({
       {
         accessorKey: "totalCompensation",
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="-ml-3 h-8"
-            onClick={() => handleColumnSort(column)}
-          >
-            Total Comp
-            <ArrowUpDown className="ml-1.5 h-3 w-3" />
-          </Button>
+          <div className="flex justify-end w-full pr-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="-mr-3 h-8"
+              onClick={() => handleColumnSort(column)}
+            >
+              Total Comp
+              <ArrowUpDown className="ml-1.5 h-3 w-3" />
+            </Button>
+          </div>
         ),
         cell: ({ row }) => (
-          <span className="text-sm font-bold text-foreground">
-            {formatCurrency(
-              row.getValue<number>("totalCompensation"),
-              row.original.currency,
-              true
-            )}
-          </span>
+          <div className="text-right pr-4">
+            <span className="text-sm font-bold text-foreground">
+              {formatCurrency(
+                row.getValue<number>("totalCompensation"),
+                row.original.currency,
+                true
+              )}
+            </span>
+          </div>
         ),
         size: 120,
       },
       {
         accessorKey: "yearsOfExperience",
-        header: "YoE",
+        header: () => (
+          <div className="text-right pr-4 w-full text-xs font-semibold">YoE</div>
+        ),
         cell: ({ row }) => (
-          <span className="text-sm text-muted-foreground">
-            {formatYoE(row.getValue<number>("yearsOfExperience"))}
-          </span>
+          <div className="text-right pr-4">
+            <span className="text-sm text-muted-foreground">
+              {formatYoE(row.getValue<number>("yearsOfExperience"))}
+            </span>
+          </div>
         ),
         size: 70,
       },

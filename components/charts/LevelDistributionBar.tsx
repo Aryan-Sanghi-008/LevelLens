@@ -39,8 +39,12 @@ const LEVEL_HEX_COLORS: Record<NormalizedLevel, string> = {
   [NormalizedLevel.EXEC]: "#1e293b",
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const CustomTooltip = ({ active, payload }: any) => {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: { payload: LevelDistributionData }[];
+}
+
+const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload as LevelDistributionData;
     return (

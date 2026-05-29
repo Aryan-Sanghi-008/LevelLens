@@ -29,8 +29,21 @@ interface CompensationBoxPlotProps {
   isLoading?: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const CustomBoxPlot = (props: any) => {
+interface CustomBoxPlotProps {
+  cy?: number;
+  xAxis?: { scale: (val: number) => number };
+  p10?: number;
+  p25?: number;
+  median?: number;
+  p75?: number;
+  p90?: number;
+  stroke?: string;
+}
+
+const CustomBoxPlot = (props: CustomBoxPlotProps) => {
+  if (!props.cy || !props.xAxis || props.p10 === undefined || props.p25 === undefined || props.median === undefined || props.p75 === undefined || props.p90 === undefined) {
+    return null;
+  }
   const { cy, xAxis, p10, p25, median, p75, p90, stroke } = props;
   const color = stroke || "#3b82f6";
 
@@ -70,8 +83,12 @@ const CustomBoxPlot = (props: any) => {
   );
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const CustomTooltip = ({ active, payload }: any) => {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: { payload: BoxPlotData }[];
+}
+
+const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload as BoxPlotData;
     return (

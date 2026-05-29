@@ -27,15 +27,19 @@ interface CompensationTrendLineProps {
 
 
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: { name: string; color: string; value: number }[];
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-popover border border-border rounded-lg p-3 shadow-md text-sm min-w-[150px]">
         <p className="font-semibold mb-2">{label}</p>
         <div className="space-y-1.5">
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index: number) => (
             <div key={index} className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-1.5">
                 <div className="size-2 rounded-full" style={{ backgroundColor: entry.color }} />

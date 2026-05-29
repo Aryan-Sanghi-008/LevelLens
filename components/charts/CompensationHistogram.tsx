@@ -25,8 +25,12 @@ interface CompensationHistogramProps {
   isLoading?: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const CustomTooltip = ({ active, payload }: any) => {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: { payload: HistogramData }[];
+}
+
+const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload as HistogramData;
     return (

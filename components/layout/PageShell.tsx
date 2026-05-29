@@ -13,7 +13,7 @@ export function PageShell({ title, description, actions, children, className, ..
     <div className={cn("flex-1 space-y-4 p-4 md:p-8 pt-6", className)} {...props}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0 pb-4 border-b border-border/50">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">{title}</h1>
           {description && (
             <p className="text-muted-foreground text-sm mt-1">
               {description}

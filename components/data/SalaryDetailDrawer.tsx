@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { PercentileGauge } from "@/components/charts/PercentileGauge";
 import { StackedBarBreakdown } from "@/components/charts/StackedBarBreakdown";
 import { formatCurrency } from "@/lib/formatters";
-import { getLevelBadgeVariant } from "@/lib/formatters";
+import { getLevelBadgeVariant, getLevelColor } from "@/lib/formatters";
+import { cn } from "@/lib/utils";
 import { MarketPositionBar } from "@/components/charts/MarketPositionBar";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
 import { useComparisonStore } from "@/lib/hooks/useComparisonStore";
@@ -160,7 +161,7 @@ export function SalaryDetailDrawer({ record, isOpen, onClose }: SalaryDetailDraw
                 </div>
                 <p className="text-sm font-medium text-muted-foreground truncate">{record.rawTitle}</p>
                 <div className="flex flex-wrap items-center gap-2 mt-3">
-                  <Badge variant={getLevelBadgeVariant(record.normalizedLevel)} className="uppercase text-[10px] tracking-wider">
+                  <Badge variant={getLevelBadgeVariant(record.normalizedLevel)} className={cn("uppercase text-[10px] font-semibold tracking-wider", getLevelColor(record.normalizedLevel))}>
                     {record.normalizedLevel}
                   </Badge>
                   <div className="flex items-center text-xs text-muted-foreground gap-1 font-medium bg-muted/50 px-2 py-1 rounded-md">
