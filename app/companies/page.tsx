@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { Button } from "@/components/ui/button";
 
 const INDUSTRIES = ["All", "Technology", "Finance", "Consulting", "E-commerce", "Media & Entertainment"];
 const SIZES = ["All", "1,000+", "5,000+", "10,000+", "50,000+", "100,000+"];
@@ -128,13 +130,25 @@ export default function CompaniesPage() {
           ))}
         </div>
       ) : (
-        <div className="py-20 text-center flex flex-col items-center gap-3">
-          <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-2">
-            <Search className="size-8 text-muted-foreground/50" />
-          </div>
-          <h3 className="text-lg font-semibold">No companies found</h3>
-          <p className="text-muted-foreground">Try adjusting your filters or search term.</p>
-        </div>
+        <EmptyState
+          title="No companies found"
+          description="Try adjusting your filters or search term."
+          icon={Search}
+          action={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSearch("");
+                setIndustryFilter("All");
+                setSizeFilter("All");
+              }}
+            >
+              Clear filters
+            </Button>
+          }
+          className="py-20"
+        />
       )}
     </div>
   );

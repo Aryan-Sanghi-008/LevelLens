@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { CompensationBreakdownSkeleton } from "@/components/shared/Skeletons";
 
 interface CompensationBreakdownProps {
   record: CompensationRecord;
@@ -194,3 +195,5 @@ export function CompensationBreakdown({ record, className }: CompensationBreakdo
     </div>
   );
 }
+
+CompensationBreakdown.Skeleton = CompensationBreakdownSkeleton;

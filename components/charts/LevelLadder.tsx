@@ -8,7 +8,9 @@ import { MOCK_COMPANIES } from "@/lib/data/mock/companies";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, BarChart3 } from "lucide-react";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { LevelLadderSkeleton } from "@/components/shared/Skeletons";
 
 interface LevelLadderProps {
   records: CompensationRecord[];
@@ -97,7 +99,13 @@ export function LevelLadder({ records }: LevelLadderProps) {
   }, [records]);
 
   if (ladderData.rungs.length === 0) {
-    return <div className="text-muted-foreground p-8 text-center">No data available for this role.</div>;
+    return (
+      <EmptyState
+        title="No data for this role"
+        description="There are no compensation records to build a level ladder."
+        icon={BarChart3}
+      />
+    );
   }
 
   const { rungs, overallMin, overallMax } = ladderData;
@@ -221,3 +229,5 @@ export function LevelLadder({ records }: LevelLadderProps) {
     </div>
   );
 }
+
+LevelLadder.Skeleton = LevelLadderSkeleton;

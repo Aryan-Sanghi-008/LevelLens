@@ -2,7 +2,7 @@
 
 import React, { useState, Suspense } from "react";
 import { PageShell } from "@/components/layout/PageShell";
-import { SalaryTable, SalaryTableSkeleton } from "@/components/data/SalaryTable";
+import { SalaryTable } from "@/components/data/SalaryTable";
 import { FilterPanel } from "@/components/data/FilterPanel";
 import { LocationAdjuster } from "@/components/data/LocationAdjuster";
 import { LocationHeatmap } from "@/components/charts/LocationHeatmap";
@@ -172,7 +172,7 @@ function HomeContent() {
             </Accordion>
           )}
 
-          <Suspense fallback={<SalaryTableSkeleton />}>
+          <Suspense fallback={<SalaryTable.Skeleton />}>
             <SalaryTable data={data} isLoading={false} isPending={isPending} />
           </Suspense>
         </div>

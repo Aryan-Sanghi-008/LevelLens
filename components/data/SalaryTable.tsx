@@ -35,6 +35,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/shared/EmptyState";
+import {
+  SalaryTableSkeleton,
+  SALARY_TABLE_ROW_HEIGHT,
+} from "@/components/shared/Skeletons";
 import { cn } from "@/lib/utils";
 import { CompensationRecord } from "@/types";
 import Image from "next/image";
@@ -50,7 +55,7 @@ import { SalaryDetailDrawer } from "@/components/data/SalaryDetailDrawer";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 /** Fixed row height — must match the actual rendered row height */
-export const ROW_HEIGHT = 56;
+export const ROW_HEIGHT = SALARY_TABLE_ROW_HEIGHT;
 const OVERSCAN = 10;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -124,26 +129,7 @@ function ScrollPositionBar({
   );
 }
 
-// ─── Loading fallback (for Suspense boundaries) ───────────────────────────────
-
-export function SalaryTableSkeleton({ rows = 8 }: { rows?: number }) {
-  return (
-    <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-      <div className="h-10 bg-muted/40 border-b border-border" />
-      {Array.from({ length: rows }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-4 px-4 border-b border-border/50"
-          style={{ height: ROW_HEIGHT }}
-        >
-          <div className="h-4 w-24 bg-muted rounded animate-pulse" />
-          <div className="h-4 w-32 bg-muted rounded animate-pulse" />
-          <div className="h-4 w-20 bg-muted rounded animate-pulse" />
-        </div>
-      ))}
-    </div>
-  );
-}
+export { SalaryTableSkeleton };
 
 // ─── SalaryTable ─────────────────────────────────────────────────────────────
 
@@ -685,12 +671,12 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
             </table>
           </div>
         ) : rows.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-56 text-muted-foreground gap-3">
-            <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
-              <Search className="h-6 w-6 text-muted-foreground/50" />
-            </div>
-            <p className="text-sm">No results match your filters.</p>
-          </div>
+          <EmptyState
+            title="No results match your filters"
+            description="Try adjusting your filters or search criteria."
+            icon={Search}
+            className="h-56"
+          />
         ) : (
           <div
             ref={scrollContainerRef}
@@ -804,3 +790,5 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
     </div>
   );
 }
+
+SalaryTable.Skeleton = SalaryTableSkeleton;

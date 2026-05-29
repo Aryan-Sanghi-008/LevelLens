@@ -7,6 +7,7 @@ import { formatCurrency } from "@/lib/formatters";
 import Image from "next/image";
 import { ExtendedCompanyProfile } from "@/lib/data/companyStats";
 import { cn } from "@/lib/utils";
+import { CompanyCardSkeleton } from "@/components/shared/Skeletons";
 
 const INDUSTRY_COLORS: Record<string, string> = {
   Technology: "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
@@ -91,3 +92,5 @@ export function CompanyCard({ profile, className }: CompanyCardProps) {
     </Link>
   );
 }
+
+CompanyCard.Skeleton = CompanyCardSkeleton;
