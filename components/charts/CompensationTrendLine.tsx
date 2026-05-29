@@ -12,7 +12,6 @@ import {
   Legend,
 } from "recharts";
 import { formatCurrency } from "@/lib/formatters";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export interface TrendLineData {
   period: string; // e.g. "Q1 2024"
@@ -33,12 +32,14 @@ const DEFAULT_COLORS = [
   "hsl(var(--chart-5))",
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-popover border border-border rounded-lg p-3 shadow-md text-sm min-w-[150px]">
         <p className="font-semibold mb-2">{label}</p>
         <div className="space-y-1.5">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-1.5">

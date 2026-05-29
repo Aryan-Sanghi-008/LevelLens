@@ -1,6 +1,7 @@
-"use client";
+// Server component
 
-import React, { useMemo } from "react";
+import React from "react";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { MOCK_COMPANIES } from "@/lib/data/mock/companies";
 import { getCompanyProfile, getGlobalLevelMedians } from "@/lib/data/companyStats";
@@ -11,7 +12,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Building2, MapPin, ExternalLink, Calendar, Users, TrendingUp, BarChart3, Database } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
+import { LevelDistributionBar } from "@/components/charts/LevelDistributionBar";
 import { cn } from "@/lib/utils";
 
 export async function generateStaticParams() {
@@ -23,8 +24,8 @@ export async function generateStaticParams() {
 export default function CompanyProfilePage({ params }: { params: { slug: string } }) {
   const { slug } = params;
   
-  const profile = useMemo(() => getCompanyProfile(slug), [slug]);
-  const globalMedians = useMemo(() => getGlobalLevelMedians(), []);
+  const profile = getCompanyProfile(slug);
+  const globalMedians = getGlobalLevelMedians();
   
   if (!profile) {
     return notFound();
@@ -38,27 +39,26 @@ export default function CompanyProfilePage({ params }: { params: { slug: string 
 
   // Data for Levels BarChart
   const chartData = Object.entries(levelDistribution)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     .filter(([_, count]) => count > 0)
     .map(([level, count]) => ({
-      name: level,
+      level: level as NormalizedLevel,
       count,
     }));
 
   // Roles Tab Data
-  const roleData = useMemo(() => {
-    const rolesMap = new Map<string, number[]>();
-    MOCK_SALARIES.filter(r => r.company.slug === slug).forEach(r => {
-      if (!rolesMap.has(r.role)) rolesMap.set(r.role, []);
-      rolesMap.get(r.role)!.push(r.totalCompensation);
-    });
-    return Array.from(rolesMap.entries())
-      .map(([role, comps]) => ({
-        role,
-        count: comps.length,
-        median: getPercentileBand(0, comps).p50,
-      }))
-      .sort((a, b) => b.median - a.median);
-  }, [slug]);
+  const rolesMap = new Map<string, number[]>();
+  MOCK_SALARIES.filter(r => r.company.slug === slug).forEach(r => {
+    if (!rolesMap.has(r.role)) rolesMap.set(r.role, []);
+    rolesMap.get(r.role)!.push(r.totalCompensation);
+  });
+  const roleData = Array.from(rolesMap.entries())
+    .map(([role, comps]) => ({
+      role,
+      count: comps.length,
+      median: getPercentileBand(0, comps).p50,
+    }))
+    .sort((a, b) => b.median - a.median);
 
   // Locations Tab Data
   const locationData = Object.entries(profile.locationDistribution)
@@ -71,8 +71,7 @@ export default function CompanyProfilePage({ params }: { params: { slug: string 
       <div className="flex flex-col md:flex-row items-start md:items-center gap-6 border-b border-border pb-8">
         <div className="flex size-24 shrink-0 items-center justify-center rounded-2xl border-4 border-background bg-muted shadow-md overflow-hidden z-10">
           {meta.logo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={meta.logo} alt={meta.name} className="size-full object-cover" />
+            <Image src={meta.logo || "https://ui-avatars.com/api/?name=Company"} alt={meta.name || "Company"} width={64} height={64} className="size-full object-cover" />
           ) : (
             <Building2 className="size-12 text-muted-foreground/50" />
           )}
@@ -218,20 +217,7 @@ export default function CompanyProfilePage({ params }: { params: { slug: string 
         
         <TabsContent value="levels" className="bg-card border border-border rounded-xl p-6 shadow-sm">
           <h2 className="text-xl font-bold mb-6">Level Distribution</h2>
-          <div className="h-[400px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} tickMargin={10} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                <RechartsTooltip 
-                  cursor={{ fill: 'rgba(0,0,0,0.05)' }}
-                  contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--popover)' }}
-                />
-                <Bar dataKey="count" fill="var(--color-primary, #3b82f6)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <LevelDistributionBar data={chartData} />
         </TabsContent>
         
         <TabsContent value="roles" className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">

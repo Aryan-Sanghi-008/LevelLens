@@ -24,8 +24,7 @@ import {
 
 function HomeContent() {
   const [filters] = useQueryStates(filterParsers);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [sort, setSort] = useState<SortState>({ field: "totalCompensation", direction: "desc" });
+  const [sort] = useState<SortState>({ field: "totalCompensation", direction: "desc" });
 
   const { data } = useFilteredSalaries(filters as Partial<FilterState>, sort);
 

@@ -2,6 +2,7 @@
 
 import React, { useMemo } from "react";
 import { CompensationRecord, NormalizedLevel } from "@/types";
+import Image from "next/image";
 import { formatCurrency, getPercentileBand, getLevelBadgeVariant, getLevelColor, formatYoE } from "@/lib/formatters";
 import { MOCK_COMPANIES } from "@/lib/data/mock/companies";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -198,8 +199,7 @@ export function LevelLadder({ records }: LevelLadderProps) {
                               className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 size-5 rounded-full bg-background border-2 border-border overflow-hidden hover:scale-125 hover:z-10 transition-transform cursor-pointer shadow-sm"
                               style={{ left: `${posPct}%` }}
                             >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={c.company.logo} alt={c.company.name} className="size-full object-cover" />
+                              <Image src={c.company.logo || "https://ui-avatars.com/api/?name=Company"} alt={c.company.name || "Company"} width={24} height={24} className="size-full object-cover" />
                             </div>
                           } />
                           <TooltipContent>

@@ -28,8 +28,9 @@ interface CompensationBoxPlotProps {
   isLoading?: boolean;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomBoxPlot = (props: any) => {
-  const { cx, cy, xAxis, yAxis, p10, p25, median, p75, p90 } = props;
+  const { cy, xAxis, p10, p25, median, p75, p90 } = props;
 
   // Recharts passes payload inside the node or as separate props if we map them
   const p10X = xAxis.scale(p10);
@@ -67,7 +68,8 @@ const CustomBoxPlot = (props: any) => {
   );
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload as BoxPlotData;
     return (

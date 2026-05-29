@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
 import { MOCK_COMPANIES } from "@/lib/data/mock/companies";
@@ -144,8 +145,7 @@ export default function RolePage({ params }: { params: { role: string } }) {
                     <div key={c.meta!.slug} className="flex items-center justify-between p-4 border border-border/50 rounded-lg">
                       <div className="flex items-center gap-4">
                         <span className="text-muted-foreground font-medium w-4">{i + 1}</span>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={c.meta!.logo} alt={c.meta!.name} className="size-8 rounded-md object-cover" />
+                        <Image src={c.meta!.logo || "https://ui-avatars.com/api/?name=Company"} alt={c.meta!.name || "Company"} width={32} height={32} className="size-8 rounded-md object-cover" />
                         <div>
                           <h4 className="font-semibold">{c.meta!.name}</h4>
                           <p className="text-xs text-muted-foreground">{c.count} records</p>
@@ -171,10 +171,9 @@ export default function RolePage({ params }: { params: { role: string } }) {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {topCompanies.map((c, i) => (
+                {topCompanies.map((c) => (
                   <div key={c.meta!.slug} className="flex items-center gap-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={c.meta!.logo} alt={c.meta!.name} className="size-6 rounded-md object-cover" />
+                    <Image src={c.meta!.logo || "https://ui-avatars.com/api/?name=Company"} alt={c.meta!.name || "Company"} width={24} height={24} className="size-6 rounded-md object-cover" />
                     <div className="flex-1 flex flex-col min-w-0">
                       <span className="text-sm font-medium truncate">{c.meta!.name}</span>
                       <span className="text-[10px] text-muted-foreground">{c.count} points</span>

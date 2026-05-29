@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { getAllCompanyProfiles, ExtendedCompanyProfile } from "@/lib/data/companyStats";
+import { getAllCompanyProfiles } from "@/lib/data/companyStats";
 import { CompanyCard } from "@/components/data/CompanyCard";
 import { Input } from "@/components/ui/input";
 import { Search, SlidersHorizontal } from "lucide-react";

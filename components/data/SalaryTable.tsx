@@ -43,6 +43,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { CompensationRecord } from "@/types";
+import Image from "next/image";
 import { formatCurrency, getLevelColor, getLevelBadgeVariant, formatYoE } from "@/lib/formatters";
 import { useComparisonStore } from "@/lib/hooks/useComparisonStore";
 
@@ -82,8 +83,7 @@ export function SalaryTable({ data, isLoading }: SalaryTableProps) {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const addToComparison = useComparisonStore((state) => state.addToComparison);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const comparisonSlots = useComparisonStore((state) => state.slots);
+
 
   const columns: ColumnDef<CompensationRecord>[] = [
     {
@@ -114,10 +114,11 @@ export function SalaryTable({ data, isLoading }: SalaryTableProps) {
         const company = row.original.company;
         return (
           <div className="flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img 
-              src={company.logo} 
-              alt={company.name} 
+            <Image 
+              src={company.logo || "https://ui-avatars.com/api/?name=Company"} 
+              alt={company.name || "Company"}
+              width={32}
+              height={32}
               className="h-8 w-8 rounded-md bg-muted object-cover" 
             />
             <div className="flex flex-col">

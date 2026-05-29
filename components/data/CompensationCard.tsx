@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { CompensationRecord } from "@/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,10 +24,11 @@ export function CompensationCard({ record, className, size = "default" }: Compen
         {/* Company Logo or Fallback */}
         <div className="flex size-12 shrink-0 items-center justify-center rounded-lg border bg-muted/50 p-2 shadow-sm">
           {record.company.logo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img 
-              src={record.company.logo} 
-              alt={`${record.company.name} logo`} 
+            <Image 
+              src={record.company.logo || "https://ui-avatars.com/api/?name=Company"} 
+              alt={`${record.company.name || "Company"} logo`} 
+              width={48} 
+              height={48} 
               className="size-full object-contain"
             />
           ) : (

@@ -12,7 +12,6 @@ import {
   Cell,
 } from "recharts";
 import { NormalizedLevel } from "@/types";
-import { getLevelColor } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export interface LevelDistributionData {
@@ -38,6 +37,7 @@ const LEVEL_HEX_COLORS: Record<NormalizedLevel, string> = {
   [NormalizedLevel.EXEC]: "#1e293b",
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload as LevelDistributionData;

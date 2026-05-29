@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   CommandDialog,
@@ -15,7 +16,7 @@ import { useSearchStore } from "@/lib/hooks/useSearchStore";
 import { MOCK_COMPANIES } from "@/lib/data/mock/companies";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
 import { NormalizedLevel } from "@/types";
-import { Clock, Briefcase, Building2, Zap, X, GraduationCap, Loader2 } from "lucide-react";
+import { Clock, X, Briefcase, Zap, GraduationCap, Loader2 } from "lucide-react";
 import { getLevelColor, getLevelBadgeVariant } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -104,7 +105,9 @@ export function CommandSearch() {
     setRecentSearches(nextSearches);
     try {
       localStorage.setItem("levelLensRecentSearches", JSON.stringify(nextSearches));
-    } catch (e) {}
+    } catch {
+      // ignore
+    }
   };
 
   const handleSelect = (url: string, term?: string) => {
@@ -120,7 +123,9 @@ export function CommandSearch() {
     setRecentSearches(nextSearches);
     try {
       localStorage.setItem("levelLensRecentSearches", JSON.stringify(nextSearches));
-    } catch (e) {}
+    } catch {
+      // ignore
+    }
   };
 
   // Filter lists based on query
@@ -148,7 +153,7 @@ export function CommandSearch() {
       </div>
       
       <CommandList>
-        <CommandEmpty>No results for "{query}". Try a broader term.</CommandEmpty>
+        <CommandEmpty>No results for &quot;{query}&quot;. Try a broader term.</CommandEmpty>
 
         {/* Empty State / Default View */}
         {!q && !isTyping && (
@@ -224,8 +229,7 @@ export function CommandSearch() {
                       value={`company-${company.name}`}
                       onSelect={() => handleSelect(`/companies/${company.slug}`, company.name)}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={company.logo} alt={company.name} className="size-4 rounded-full object-cover" />
+                      <Image src={company.logo || "https://ui-avatars.com/api/?name=Company"} alt={company.name || "Company"} width={16} height={16} className="size-4 rounded-full object-cover" />
                       <span className="flex-1">{company.name}</span>
                       <span className="text-xs text-muted-foreground">{company.industry}</span>
                     </CommandItem>
