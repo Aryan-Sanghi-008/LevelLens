@@ -64,6 +64,7 @@ export interface FilterState {
   minYoe?: number;
   maxYoe?: number;
   currency?: string;
+  verified?: boolean;
 }
 
 export interface SortState {

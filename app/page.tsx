@@ -1,21 +1,48 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { PageShell } from "@/components/layout/PageShell";
 import { SalaryTable } from "@/components/data/SalaryTable";
+import { FilterPanel } from "@/components/data/FilterPanel";
 import { useFilteredSalaries } from "@/lib/hooks/useFilteredSalaries";
-import { FilterState, SortState } from "@/types";
+import { SortState, FilterState } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Filter, Download } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Download, SlidersHorizontal } from "lucide-react";
+import { useQueryStates } from "nuqs";
+import { filterParsers } from "@/lib/searchParams";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
-export default function Home() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [filters, setFilters] = useState<Partial<FilterState>>({});
+function HomeContent() {
+  const [filters] = useQueryStates(filterParsers);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [sort, setSort] = useState<SortState>({ field: "totalCompensation", direction: "desc" });
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data, totalCount, filteredCount, isFiltered } = useFilteredSalaries(filters, sort);
+  const { data } = useFilteredSalaries(filters as Partial<FilterState>, sort);
+
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (filters.levels && filters.levels.length > 0) count += filters.levels.length;
+    if (filters.roles && filters.roles.length > 0) count += filters.roles.length;
+    if (filters.companies && filters.companies.length > 0) count += filters.companies.length;
+    if (filters.locations && filters.locations.length > 0) count += filters.locations.length;
+    if (filters.minComp !== null && filters.minComp !== undefined) count += 1;
+    if (filters.maxComp !== null && filters.maxComp !== undefined) count += 1;
+    if (filters.minYoe !== null && filters.minYoe !== undefined) count += 1;
+    if (filters.maxYoe !== null && filters.maxYoe !== undefined) count += 1;
+    if (filters.verified) count += 1;
+    if (filters.currency && filters.currency !== "USD") count += 1;
+    return count;
+  };
 
   return (
     <PageShell
@@ -34,39 +61,52 @@ export default function Home() {
       }
     >
       <div className="flex flex-col md:flex-row gap-6 mt-4">
-        {/* Hardcoded Filter Sidebar Placeholder */}
-        <div className="w-full md:w-[240px] shrink-0 space-y-6">
-          <div className="rounded-lg border border-border bg-card p-4">
-            <div className="flex items-center gap-2 font-medium border-b border-border pb-3 mb-4">
-              <Filter className="h-4 w-4" />
-              Filters
-            </div>
-            
-            <div className="space-y-4">
-              {/* Dummy filter sections */}
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Company</label>
-                <div className="h-8 rounded bg-muted/50 w-full animate-pulse" />
-                <div className="h-8 rounded bg-muted/50 w-full animate-pulse" />
+        {/* Mobile Filter & Utility Header */}
+        <div className="flex items-center justify-between md:hidden gap-3 w-full mb-2">
+          <Dialog>
+            <DialogTrigger render={
+              <Button variant="outline" className="relative flex items-center justify-center gap-2 flex-1 sm:flex-initial shadow-xs rounded-xl h-10 px-4" />
+            }>
+              <SlidersHorizontal className="h-4 w-4 text-brand-primary" />
+              <span className="font-semibold text-sm">Filters</span>
+              {getActiveFiltersCount() > 0 && (
+                <Badge variant="default" className="bg-brand-primary text-brand-primary-foreground h-5 min-w-5 rounded-full px-1 flex items-center justify-center font-bold text-[10px]">
+                  {getActiveFiltersCount()}
+                </Badge>
+              )}
+            </DialogTrigger>
+            <DialogContent className="max-w-[calc(100%-2rem)] w-full max-h-[85vh] overflow-y-auto rounded-2xl p-6 bg-background border border-border shadow-2xl">
+              <DialogHeader className="mb-4">
+                <DialogTitle className="text-lg font-bold flex items-center gap-2">
+                  <SlidersHorizontal className="h-5 w-5 text-brand-primary" />
+                  <span>Salary Filters</span>
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground/90">
+                  Narrow down results using levels, roles, locations, and compensation ranges.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-2">
+                <FilterPanel />
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Role</label>
-                <div className="h-8 rounded bg-muted/50 w-full animate-pulse" />
-              </div>
+              <DialogFooter className="mt-6 pt-4 border-t border-border">
+                <DialogClose render={
+                  <Button className="w-full h-10 rounded-xl bg-brand-primary hover:bg-brand-primary/95 text-brand-primary-foreground font-semibold text-sm" />
+                }>
+                  Apply Filters
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Level</label>
-                <div className="h-8 rounded bg-muted/50 w-full animate-pulse" />
-                <div className="h-8 rounded bg-muted/50 w-3/4 animate-pulse" />
-              </div>
+          <Button variant="outline" size="sm" className="sm:hidden flex items-center gap-2 h-10 px-4 rounded-xl shadow-xs">
+            <Download className="h-4 w-4 text-muted-foreground" />
+            <span className="font-semibold text-sm">Export</span>
+          </Button>
+        </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Location</label>
-                <div className="h-8 rounded bg-muted/50 w-full animate-pulse" />
-              </div>
-            </div>
-          </div>
+        {/* Filter Sidebar (Desktop) */}
+        <div className="hidden md:block w-[280px] shrink-0">
+          <FilterPanel />
         </div>
 
         {/* Main Table Area */}
@@ -75,5 +115,17 @@ export default function Home() {
         </div>
       </div>
     </PageShell>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-primary"></div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
