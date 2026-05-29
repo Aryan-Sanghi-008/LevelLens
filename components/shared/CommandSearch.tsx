@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import Image from "next/image";
+import { CompanyLogo } from "@/components/shared/CompanyLogo";
 import { useRouter } from "next/navigation";
 import {
   CommandDialog,
@@ -229,7 +229,14 @@ export function CommandSearch() {
                       value={`company-${company.name}`}
                       onSelect={() => handleSelect(`/companies/${company.slug}`, company.name)}
                     >
-                      <Image src={company.logo || "https://ui-avatars.com/api/?name=Company"} alt={company.name || "Company"} width={16} height={16} className="size-4 rounded-full object-cover" />
+                      <CompanyLogo
+                        src={company.logo}
+                        name={company.name}
+                        alt={company.name || "Company"}
+                        width={16}
+                        height={16}
+                        className="size-4 rounded-full object-cover"
+                      />
                       <span className="flex-1">{company.name}</span>
                       <span className="text-xs text-muted-foreground">{company.industry}</span>
                     </CommandItem>

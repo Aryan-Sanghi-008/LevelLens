@@ -1,5 +1,5 @@
 import React from "react";
-import Image from "next/image";
+import { CompanyLogo } from "@/components/shared/CompanyLogo";
 import { CompensationRecord } from "@/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,11 +24,12 @@ export function CompensationCard({ record, className, size = "default" }: Compen
         {/* Company Logo or Fallback */}
         <div className="flex size-12 shrink-0 items-center justify-center rounded-lg border bg-muted/50 p-2 shadow-sm">
           {record.company.logo ? (
-            <Image 
-              src={record.company.logo || "https://ui-avatars.com/api/?name=Company"} 
-              alt={`${record.company.name || "Company"} logo`} 
-              width={48} 
-              height={48} 
+            <CompanyLogo
+              src={record.company.logo}
+              name={record.company.name}
+              alt={`${record.company.name || "Company"} logo`}
+              width={48}
+              height={48}
               className="size-full object-contain"
             />
           ) : (

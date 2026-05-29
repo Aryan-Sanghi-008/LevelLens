@@ -42,7 +42,7 @@ import {
 } from "@/components/shared/Skeletons";
 import { cn } from "@/lib/utils";
 import { CompensationRecord } from "@/types";
-import Image from "next/image";
+import { CompanyLogo } from "@/components/shared/CompanyLogo";
 import {
   formatCurrency,
   getLevelColor,
@@ -223,16 +223,13 @@ export function SalaryTable({ data, isLoading, isPending }: SalaryTableProps) {
           const company = row.original.company;
           return (
             <div className="flex items-center gap-3">
-              <Image
-                src={
-                  company.logo ||
-                  `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=random&color=fff&rounded=true`
-                }
+              <CompanyLogo
+                src={company.logo}
+                name={company.name}
                 alt={company.name || "Company"}
                 width={32}
                 height={32}
                 className="h-8 w-8 rounded-md bg-muted object-cover shrink-0"
-                unoptimized
               />
               <div className="flex flex-col min-w-0">
                 <span className="font-semibold text-sm truncate">{company.name}</span>

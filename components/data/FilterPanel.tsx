@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
+import { CompanyLogo } from "@/components/shared/CompanyLogo";
 import { useQueryStates } from "nuqs";
 import { filterParsers } from "@/lib/searchParams";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
@@ -257,12 +257,13 @@ export function FilterPanel() {
                       )}>
                         <Check className={cn("h-2.5 w-2.5 stroke-[3px]", isSelected ? "block" : "hidden")} />
                       </div>
-                      <Image 
-                        src={company.logo || "https://ui-avatars.com/api/?name=Company"} 
+                      <CompanyLogo
+                        src={company.logo}
+                        name={company.name}
                         alt={company.name || "Company"}
                         width={16}
                         height={16}
-                        className="h-4 w-4 rounded-md mr-2 object-cover border border-border/40" 
+                        className="h-4 w-4 rounded-md mr-2 object-cover border border-border/40"
                       />
                       <span className="truncate">{company.name}</span>
                     </button>

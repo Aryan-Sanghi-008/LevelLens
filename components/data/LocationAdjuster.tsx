@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
 import { MOCK_COMPANIES } from "@/lib/data/mock/companies";
-import Image from "next/image";
+import { CompanyLogo } from "@/components/shared/CompanyLogo";
 
 export function LocationAdjuster() {
   const [amountInput, setAmountInput] = useState<string>("4000000"); // Default 40L
@@ -195,7 +195,14 @@ export function LocationAdjuster() {
             {topCompaniesInTargetCity.map((c, i) => (
               <div key={c.slug} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
                 <span className="text-xs font-bold text-muted-foreground/50 w-3">{i + 1}</span>
-                <Image src={c.meta!.logo || "https://ui-avatars.com/api/?name=Company"} alt={c.meta!.name || "Company"} width={24} height={24} className="size-6 rounded-md object-cover" />
+                <CompanyLogo
+                  src={c.meta!.logo}
+                  name={c.meta!.name}
+                  alt={c.meta!.name || "Company"}
+                  width={24}
+                  height={24}
+                  className="size-6 rounded-md object-cover"
+                />
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm truncate">{c.meta!.name}</div>
                 </div>

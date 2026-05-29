@@ -13,7 +13,7 @@ import { getLevelBadgeVariant } from "@/lib/formatters";
 import { MarketPositionBar } from "@/components/charts/MarketPositionBar";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
 import { useComparisonStore } from "@/lib/hooks/useComparisonStore";
-import Image from "next/image";
+import { CompanyLogo } from "@/components/shared/CompanyLogo";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -117,8 +117,9 @@ export function SalaryDetailDrawer({ record, isOpen, onClose }: SalaryDetailDraw
           <div className="flex-1 overflow-y-auto p-5 space-y-8 bg-muted/10">
             {/* Header Section */}
             <div className="flex gap-4 items-start">
-              <Image 
-                src={record.company.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(record.company.name)}&background=random`}
+              <CompanyLogo
+                src={record.company.logo}
+                name={record.company.name}
                 alt={record.company.name}
                 width={48}
                 height={48}
@@ -227,7 +228,14 @@ export function SalaryDetailDrawer({ record, isOpen, onClose }: SalaryDetailDraw
                   {similarRecords.map(r => (
                     <div key={r.id} className="p-3 flex items-center justify-between hover:bg-muted/30 transition-colors">
                       <div className="flex items-center gap-3 min-w-0">
-                        <Image src={r.company.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.company.name)}`} alt={r.company.name} width={24} height={24} className="rounded object-cover size-6 shadow-sm" />
+                        <CompanyLogo
+                          src={r.company.logo}
+                          name={r.company.name}
+                          alt={r.company.name}
+                          width={24}
+                          height={24}
+                          className="rounded object-cover size-6 shadow-sm"
+                        />
                         <div className="truncate">
                           <div className="font-semibold text-sm truncate">{r.company.name}</div>
                           <div className="text-[10px] text-muted-foreground font-medium">{r.yearsOfExperience} YoE</div>

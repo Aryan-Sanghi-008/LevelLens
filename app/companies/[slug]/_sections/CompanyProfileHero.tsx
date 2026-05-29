@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { CompanyLogo } from "@/components/shared/CompanyLogo";
 import { getCompanyProfile } from "@/lib/data/companyStats";
 import { formatCurrency, getLevelBadgeVariant, getLevelColor } from "@/lib/formatters";
 import { NormalizedLevel } from "@/types";
@@ -30,11 +30,12 @@ export async function CompanyProfileHero({ slug }: { slug: string }) {
       <div className="flex flex-col md:flex-row items-start md:items-center gap-6 border-b border-border pb-8">
         <div className="flex size-24 shrink-0 items-center justify-center rounded-2xl border-4 border-background bg-muted shadow-md overflow-hidden z-10">
           {meta.logo ? (
-            <Image
-              src={meta.logo || "https://ui-avatars.com/api/?name=Company"}
+            <CompanyLogo
+              src={meta.logo}
+              name={meta.name}
               alt={meta.name || "Company"}
-              width={64}
-              height={64}
+              width={96}
+              height={96}
               className="size-full object-cover"
             />
           ) : (

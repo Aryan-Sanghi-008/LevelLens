@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import Image from "next/image";
+import { CompanyLogo } from "@/components/shared/CompanyLogo";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
@@ -175,11 +175,9 @@ export default function RolePage({ params }: { params: { role: string } }) {
                       >
                         <div className="flex items-center gap-4">
                           <span className="text-muted-foreground font-medium w-4">{i + 1}</span>
-                          <Image
-                            src={
-                              c.meta!.logo ||
-                              "https://ui-avatars.com/api/?name=Company"
-                            }
+                          <CompanyLogo
+                            src={c.meta!.logo}
+                            name={c.meta!.name}
                             alt={c.meta!.name || "Company"}
                             width={32}
                             height={32}
@@ -214,8 +212,9 @@ export default function RolePage({ params }: { params: { role: string } }) {
               <div className="space-y-4">
                 {topCompanies.map((c) => (
                   <div key={c.meta!.slug} className="flex items-center gap-3">
-                    <Image
-                      src={c.meta!.logo || "https://ui-avatars.com/api/?name=Company"}
+                    <CompanyLogo
+                      src={c.meta!.logo}
+                      name={c.meta!.name}
                       alt={c.meta!.name || "Company"}
                       width={24}
                       height={24}

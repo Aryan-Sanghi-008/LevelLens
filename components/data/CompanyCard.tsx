@@ -4,7 +4,7 @@ import { Building2, Users } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters";
-import Image from "next/image";
+import { CompanyLogo } from "@/components/shared/CompanyLogo";
 import { ExtendedCompanyProfile } from "@/lib/data/companyStats";
 import { cn } from "@/lib/utils";
 import { CompanyCardSkeleton } from "@/components/shared/Skeletons";
@@ -42,7 +42,14 @@ export function CompanyCard({ profile, className }: CompanyCardProps) {
           <div className="flex items-center gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border bg-muted/50 p-1 shadow-sm overflow-hidden">
               {meta.logo ? (
-                <Image src={meta.logo || "https://ui-avatars.com/api/?name=Company"} alt={meta.name || "Company"} width={48} height={48} className="size-full object-cover rounded-md" />
+                <CompanyLogo
+                  src={meta.logo}
+                  name={meta.name}
+                  alt={meta.name || "Company"}
+                  width={48}
+                  height={48}
+                  className="size-full object-cover rounded-md"
+                />
               ) : (
                 <Building2 className="size-5 text-muted-foreground/50" />
               )}
