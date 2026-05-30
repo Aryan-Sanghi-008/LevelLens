@@ -7,9 +7,9 @@ const withBundleAnalyzer = BundleAnalyzer({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Optimize CSS output in production
-  experimental: {
-    optimizeCss: true,
-  },
+  // experimental: {
+  //   optimizeCss: true,
+  // },
 
   images: {
     dangerouslyAllowSVG: true,
