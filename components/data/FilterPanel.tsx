@@ -117,6 +117,7 @@ export function FilterPanel() {
       <ActiveFilters />
 
       <Accordion 
+        multiple
         defaultValue={["levels", "role", "company", "comp", "yoe", "verified", "currency", "location"]} 
         className="w-full space-y-3"
       >

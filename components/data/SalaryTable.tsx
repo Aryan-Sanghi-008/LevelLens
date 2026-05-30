@@ -9,11 +9,21 @@ import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   SortingState,
   OnChangeFn,
   useReactTable,
   Row,
 } from "@tanstack/react-table";
+import { useQueryStates } from "nuqs";
+import { filterParsers } from "@/lib/searchParams";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   ArrowUpDown,
@@ -522,16 +532,33 @@ export function SalaryTable({
 
   // ── TanStack Table instance ────────────────────────────────────────────────
 
+  const [filters, setFilters] = useQueryStates(filterParsers);
+  const page = filters.page || 1;
+  const [pageSize, setPageSize] = React.useState(25);
+
   const table = useReactTable({
     data,
     columns,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    state: { sorting, columnVisibility, rowSelection },
-    // No pagination — virtualisation handles this
+    state: {
+      sorting,
+      columnVisibility,
+      rowSelection,
+      pagination: {
+        pageIndex: page - 1,
+        pageSize,
+      }
+    },
+    onPaginationChange: (updater) => {
+      const nextState = typeof updater === "function" ? updater({ pageIndex: page - 1, pageSize }) : updater;
+      setFilters({ page: nextState.pageIndex + 1 });
+      setPageSize(nextState.pageSize);
+    },
     manualPagination: false,
   });
 
@@ -623,10 +650,15 @@ export function SalaryTable({
     [rows, virtualizer]
   );
 
-  // Track scroll position for the indicator bar
+  const headerContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // Track scroll position for the indicator bar and sync header scroll
   const handleScroll = React.useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
       setScrollTop(e.currentTarget.scrollTop);
+      if (headerContainerRef.current) {
+        headerContainerRef.current.scrollLeft = e.currentTarget.scrollLeft;
+      }
     },
     []
   );
@@ -690,7 +722,10 @@ export function SalaryTable({
       {/* Mobile card list */}
       <div className="md:hidden rounded-xl border border-border bg-card shadow-sm overflow-hidden">
         <SalaryTableMobile
-          data={sortedData}
+          data={React.useMemo(() => {
+            const start = (page - 1) * pageSize;
+            return sortedData.slice(start, start + pageSize);
+          }, [sortedData, page, pageSize])}
           isLoading={isLoading}
           isPending={isPending}
           onRecordClick={(record) => setSelectedRecord(record)}
@@ -735,7 +770,7 @@ export function SalaryTable({
           </div>
         )}
         {/* Sticky Header — rendered outside the scroll container */}
-        <div className="overflow-x-auto bg-muted/40 border-b border-border">
+        <div className="overflow-hidden bg-muted/40 border-b border-border" ref={headerContainerRef}>
           <table
             className="w-full min-w-[860px] border-collapse"
             style={{ tableLayout: "fixed" }}
@@ -752,7 +787,8 @@ export function SalaryTable({
               {headerGroups.map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header, idx) => {
-                    const isSticky = idx === 1;
+                    const isSticky = idx === 0 || idx === 1;
+                    const leftOffset = idx === 1 ? "left-[40px]" : "left-0";
                     return (
                       <th
                         key={header.id}
@@ -769,7 +805,7 @@ export function SalaryTable({
                         className={cn(
                           "h-10 px-3 text-left text-xs font-semibold text-muted-foreground whitespace-nowrap",
                           isSticky &&
-                            "sticky left-0 z-20 bg-muted/60 shadow-[1px_0_0_0_hsl(var(--border))]"
+                            cn("sticky z-20 shadow-[1px_0_0_0_hsl(var(--border))]", leftOffset, idx === 0 ? "bg-muted/80" : "bg-muted/60")
                         )}
                       >
                         {header.isPlaceholder
@@ -810,8 +846,8 @@ export function SalaryTable({
                         key={j}
                         className={cn(
                           "px-3",
-                          j === 1 &&
-                            "sticky left-0 bg-card shadow-[1px_0_0_0_hsl(var(--border))]"
+                          (j === 0 || j === 1) &&
+                            cn("sticky bg-card shadow-[1px_0_0_0_hsl(var(--border))] z-10", j === 1 ? "left-[40px]" : "left-0")
                         )}
                       >
                         <Skeleton className="h-4 w-full max-w-[100px]" />
@@ -884,7 +920,8 @@ export function SalaryTable({
                         onClick={() => handleRowClick(row)}
                       >
                         {row.getVisibleCells().map((cell, idx) => {
-                          const isSticky = idx === 1;
+                          const isSticky = idx === 0 || idx === 1;
+                          const leftOffset = idx === 1 ? "left-[40px]" : "left-0";
                           const isCellActive = activeCell
                             ? activeCell.rowIndex === virtualRow.index && activeCell.colIndex === idx
                             : virtualRow.index === 0 && idx === 1;
@@ -900,8 +937,14 @@ export function SalaryTable({
                               className={cn(
                                 "px-3 overflow-hidden focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1 focus:ring-offset-background",
                                 isSticky &&
-                                  "sticky left-0 z-10 bg-card group-hover:bg-muted/40 transition-colors shadow-[1px_0_0_0_hsl(var(--border))]",
-                                row.getIsSelected() && isSticky && "bg-primary/5"
+                                  cn("sticky z-10 shadow-[1px_0_0_0_hsl(var(--border))] transition-colors", leftOffset),
+                                isSticky && (
+                                  row.getIsSelected()
+                                    ? "bg-[#f0f7ff] dark:bg-[#131d2e] group-hover:bg-[#e0efff] dark:group-hover:bg-[#1a283e]"
+                                    : isSelfReported
+                                    ? "bg-[#fffbeb] dark:bg-[#1c1810] group-hover:bg-[#fef3c7] dark:group-hover:bg-[#261f12]"
+                                    : "bg-card group-hover:bg-muted/40"
+                                )
                               )}
                               style={{ height: ROW_HEIGHT }}
                             >
@@ -928,23 +971,105 @@ export function SalaryTable({
           </div>
         )}
 
-        {/* Footer: row count */}
-        {!isLoading && rows.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-2.5 border-t border-border bg-muted/20 text-xs text-muted-foreground">
-            <span>
-              <span className="font-semibold text-foreground">
-                {tableStats.totalRows.toLocaleString()}
-              </span>{" "}
-              records
-              {tableStats.selectedCount > 0 && (
-                <span className="ml-2 text-primary font-medium">
-                  · {tableStats.selectedCount} selected
+        {/* Footer: pagination and row count */}
+        {!isLoading && data.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-border bg-muted/20 text-xs text-muted-foreground select-none">
+            <div className="flex flex-wrap items-center gap-4">
+              <span>
+                Showing{" "}
+                <span className="font-semibold text-foreground">
+                  {Math.min(data.length, (page - 1) * pageSize + 1)}
                 </span>
-              )}
-            </span>
-            <span className="text-[11px]">
-              Scroll to explore · {OVERSCAN}-row overscan active
-            </span>
+                {" "}to{" "}
+                <span className="font-semibold text-foreground">
+                  {Math.min(data.length, page * pageSize)}
+                </span>
+                {" "}of{" "}
+                <span className="font-semibold text-foreground">
+                  {data.length}
+                </span>{" "}
+                records
+                {tableStats.selectedCount > 0 && (
+                  <span className="ml-2 text-primary font-medium">
+                    · {tableStats.selectedCount} selected
+                  </span>
+                )}
+              </span>
+
+              {/* Rows per page selector */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-muted-foreground">Rows per page:</span>
+                <Select
+                  value={String(pageSize)}
+                  onValueChange={(val) => {
+                    setPageSize(Number(val));
+                    setFilters({ page: 1 });
+                  }}
+                >
+                  <SelectTrigger className="h-7 w-[70px] rounded-md text-[11px] px-2 py-0.5 bg-background/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10" className="text-xs">10</SelectItem>
+                    <SelectItem value="25" className="text-xs">25</SelectItem>
+                    <SelectItem value="50" className="text-xs">50</SelectItem>
+                    <SelectItem value="100" className="text-xs">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Page navigation controls */}
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="icon-sm"
+                className="h-7 w-7 rounded-md"
+                disabled={!table.getCanPreviousPage()}
+                onClick={() => table.setPageIndex(0)}
+                aria-label="First page"
+              >
+                <span className="text-[10px] font-bold">«</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon-sm"
+                className="h-7 w-7 rounded-md"
+                disabled={!table.getCanPreviousPage()}
+                onClick={() => table.previousPage()}
+                aria-label="Previous page"
+              >
+                <span className="text-[10px] font-bold">‹</span>
+              </Button>
+              
+              <div className="flex items-center gap-1 font-medium text-foreground px-2">
+                <span>Page</span>
+                <span className="font-bold">{page}</span>
+                <span>of</span>
+                <span className="font-bold">{table.getPageCount() || 1}</span>
+              </div>
+
+              <Button
+                variant="outline"
+                size="icon-sm"
+                className="h-7 w-7 rounded-md"
+                disabled={!table.getCanNextPage()}
+                onClick={() => table.nextPage()}
+                aria-label="Next page"
+              >
+                <span className="text-[10px] font-bold">›</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon-sm"
+                className="h-7 w-7 rounded-md"
+                disabled={!table.getCanNextPage()}
+                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                aria-label="Last page"
+              >
+                <span className="text-[10px] font-bold">»</span>
+              </Button>
+            </div>
           </div>
         )}
       </div>

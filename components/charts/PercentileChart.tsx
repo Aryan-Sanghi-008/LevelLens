@@ -18,9 +18,10 @@ import { useChartTheme } from "@/lib/hooks/useChartTheme";
 interface PercentileChartProps {
   data: CompensationRecord[];
   highlightValue?: number;
+  activeCurrency?: string;
 }
 
-export function PercentileChart({ data, highlightValue }: PercentileChartProps) {
+export function PercentileChart({ data, highlightValue, activeCurrency = "USD" }: PercentileChartProps) {
   const theme = useChartTheme();
 
   const { chartData, percentiles, domain } = useMemo(() => {
@@ -91,58 +92,63 @@ export function PercentileChart({ data, highlightValue }: PercentileChartProps) 
   const p75Off = getOffset(percentiles.p75);
 
   return (
-    <div className="w-full h-[300px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
-          <defs>
-            <linearGradient id="splitColor" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor={theme.mutedForeground} stopOpacity={0.2} />
-              <stop offset={`${p25Off}%`} stopColor={theme.mutedForeground} stopOpacity={0.2} />
-              <stop offset={`${p25Off}%`} stopColor={theme.chart1} stopOpacity={0.4} />
-              <stop offset={`${p75Off}%`} stopColor={theme.chart1} stopOpacity={0.4} />
-              <stop offset={`${p75Off}%`} stopColor={theme.chart2} stopOpacity={0.5} />
-              <stop offset="100%" stopColor={theme.chart2} stopOpacity={0.5} />
-            </linearGradient>
-            <linearGradient id="strokeColor" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor={theme.mutedForeground} />
-              <stop offset={`${p25Off}%`} stopColor={theme.mutedForeground} />
-              <stop offset={`${p25Off}%`} stopColor={theme.chart1} />
-              <stop offset={`${p75Off}%`} stopColor={theme.chart1} />
-              <stop offset={`${p75Off}%`} stopColor={theme.chart2} />
-              <stop offset="100%" stopColor={theme.chart2} />
-            </linearGradient>
-          </defs>
+    <div className="w-full space-y-2">
+      <div className="flex justify-between items-center text-[11px] text-muted-foreground px-1 pb-1 border-b border-border/40 select-none">
+        <span>X-Axis: Total Compensation ({activeCurrency})</span>
+        <span>Y-Axis: Relative Density of Reports</span>
+      </div>
+      <div className="w-full h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+            <defs>
+              <linearGradient id="splitColor" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor={theme.mutedForeground} stopOpacity={0.2} />
+                <stop offset={`${p25Off}%`} stopColor={theme.mutedForeground} stopOpacity={0.2} />
+                <stop offset={`${p25Off}%`} stopColor={theme.chart1} stopOpacity={0.4} />
+                <stop offset={`${p75Off}%`} stopColor={theme.chart1} stopOpacity={0.4} />
+                <stop offset={`${p75Off}%`} stopColor={theme.chart2} stopOpacity={0.5} />
+                <stop offset="100%" stopColor={theme.chart2} stopOpacity={0.5} />
+              </linearGradient>
+              <linearGradient id="strokeColor" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor={theme.mutedForeground} />
+                <stop offset={`${p25Off}%`} stopColor={theme.mutedForeground} />
+                <stop offset={`${p25Off}%`} stopColor={theme.chart1} />
+                <stop offset={`${p75Off}%`} stopColor={theme.chart1} />
+                <stop offset={`${p75Off}%`} stopColor={theme.chart2} />
+                <stop offset="100%" stopColor={theme.chart2} />
+              </linearGradient>
+            </defs>
 
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.border} opacity={0.5} />
-          
-          <XAxis 
-            dataKey="bin" 
-            type="number"
-            domain={domain}
-            tickFormatter={(val) => formatCurrency(val, "INR", true)}
-            stroke={theme.mutedForeground}
-            fontSize={11}
-            tickLine={false}
-            axisLine={false}
-            dy={10}
-          />
-          <YAxis hide />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.border} opacity={0.5} />
+            
+            <XAxis 
+              dataKey="bin" 
+              type="number"
+              domain={domain}
+              tickFormatter={(val) => formatCurrency(val, activeCurrency, true)}
+              stroke={theme.mutedForeground}
+              fontSize={11}
+              tickLine={false}
+              axisLine={false}
+              dy={10}
+            />
+            <YAxis hide />
 
-          <Tooltip 
-            cursor={{ stroke: theme.foreground, strokeWidth: 1, strokeDasharray: '4 4' }}
-            content={({ active, payload }) => {
-              if (active && payload && payload.length) {
-                const val = payload[0].payload.bin;
-                return (
-                  <div className="bg-background border border-border shadow-md rounded-lg p-3">
-                    <p className="font-semibold">{formatCurrency(val, "INR", true)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Density: {Number(payload[0].value)?.toFixed(1)}</p>
-                  </div>
-                );
-              }
-              return null;
-            }}
-          />
+            <Tooltip 
+              cursor={{ stroke: theme.foreground, strokeWidth: 1, strokeDasharray: '4 4' }}
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const val = payload[0].payload.bin;
+                  return (
+                    <div className="bg-background border border-border shadow-md rounded-lg p-3">
+                      <p className="font-semibold">{formatCurrency(val, activeCurrency, true)}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Density: {Number(payload[0].value)?.toFixed(1)}</p>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
 
           <Area 
             type="monotone" 
@@ -174,6 +180,7 @@ export function PercentileChart({ data, highlightValue }: PercentileChartProps) 
           )}
         </AreaChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 }

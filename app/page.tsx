@@ -84,7 +84,7 @@ function HomeContent() {
 
   const filterTabs = (
     <Tabs defaultValue="filters" className="w-full">
-      <TabsList className="w-full grid grid-cols-2 mb-4">
+      <TabsList className="w-full grid grid-cols-2 mb-4 relative z-20 bg-muted">
         <TabsTrigger value="filters">Filters</TabsTrigger>
         <TabsTrigger value="location">Location</TabsTrigger>
       </TabsList>
@@ -166,13 +166,13 @@ function HomeContent() {
             <Accordion className="w-full">
               <AccordionItem
                 value="distribution"
-                className="border rounded-lg bg-card shadow-sm px-4 data-[state=open]:pb-4 border-b-0"
+                className="border rounded-lg bg-card shadow-sm px-4 data-[state=open]:pb-4"
               >
                 <AccordionTrigger className="hover:no-underline py-3 text-sm font-semibold">
                   Distribution Shape
                 </AccordionTrigger>
                 <AccordionContent>
-                  <PercentileChart data={data} />
+                  <PercentileChart data={data} activeCurrency={(filters.currency as string) || "USD"} />
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
