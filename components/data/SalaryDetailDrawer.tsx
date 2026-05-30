@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { XIcon, Share, Plus, AlertTriangle, CheckCircle2, MapPin, Calendar, LinkIcon } from "lucide-react";
+import { XIcon, Plus, AlertTriangle, CheckCircle2, MapPin, Calendar, LinkIcon } from "lucide-react";
 import { CompensationRecord } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -93,15 +93,6 @@ export function SalaryDetailDrawer({ record, isOpen, onClose }: SalaryDetailDraw
 
   if (!record) return null;
 
-  const handleShare = () => {
-    const url = new URL(window.location.origin);
-    url.searchParams.set("roles", record.role);
-    url.searchParams.set("companies", record.company.slug);
-    url.searchParams.set("levels", record.normalizedLevel);
-    url.searchParams.set("location", record.location.city);
-    navigator.clipboard.writeText(url.toString());
-    toast.success("Link copied to clipboard with applied filters");
-  };
 
   const handleCompare = () => {
     addToComparison({
@@ -129,9 +120,6 @@ export function SalaryDetailDrawer({ record, isOpen, onClose }: SalaryDetailDraw
           <div className="flex items-center justify-between p-4 border-b bg-card shrink-0">
             <h2 className="font-semibold text-base">Compensation Record</h2>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon-sm" onClick={handleShare} title="Share">
-                <Share className="size-4" />
-              </Button>
               <DialogPrimitive.Close render={<Button variant="ghost" size="icon-sm" />}>
                 <XIcon className="size-4" />
               </DialogPrimitive.Close>

@@ -28,40 +28,14 @@ export const parseAsSlots = createParser({
   },
 });
 
-// Custom parser for minComp and maxComp to scale based on currency in URL
-const parseComp = () => createParser({
-  parse(queryValue) {
-    if (!queryValue) return null;
-    const num = parseInt(queryValue, 10);
-    if (isNaN(num)) return null;
-
-    let isINR = false;
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      isINR = params.get("currency") === "INR";
-    }
-    const scale = isINR ? 100000 : 1000;
-    return num * scale;
-  },
-  serialize(value) {
-    if (value === null || value === undefined) return "";
-    let isINR = false;
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      isINR = params.get("currency") === "INR";
-    }
-    const scale = isINR ? 100000 : 1000;
-    return Math.round(value / scale).toString();
-  }
-});
 
 export const filterParsers = {
   levels: parseAsArrayOf(parseAsString).withDefault([]),
   roles: parseAsArrayOf(parseAsString).withDefault([]),
   companies: parseAsArrayOf(parseAsString).withDefault([]),
   location: parseAsArrayOf(parseAsString).withDefault([]),
-  minComp: parseComp(),
-  maxComp: parseComp(),
+  minComp: parseAsInteger,
+  maxComp: parseAsInteger,
   minYoe: parseAsInteger,
   maxYoe: parseAsInteger,
   currency: parseAsString,

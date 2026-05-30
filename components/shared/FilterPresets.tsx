@@ -14,7 +14,7 @@ const PRESETS: FilterPresetItem[] = [
   },
   {
     label: "Bangalore ₹50L+",
-    href: "/?location=Bangalore&minComp=50&currency=INR",
+    href: "/?location=Bangalore&minComp=5000000&currency=INR",
   },
   {
     label: "Staff+ Engineers",

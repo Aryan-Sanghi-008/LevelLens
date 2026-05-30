@@ -26,7 +26,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ShareButton } from "@/components/shared/ShareButton";
 import { FilterPresets } from "@/components/shared/FilterPresets";
 
 const sortMapUrlToTable: Record<string, keyof CompensationRecord> = {
@@ -199,9 +198,6 @@ function HomeContent() {
         <div className="flex-1 min-w-0 flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card border rounded-lg p-3.5 px-4 shadow-sm">
             <FilterPresets className="flex-1" />
-            <div className="flex items-center gap-2 shrink-0">
-              <ShareButton />
-            </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-between bg-card border rounded-lg p-3 px-4 shadow-sm gap-2">
