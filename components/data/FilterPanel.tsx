@@ -118,7 +118,7 @@ export function FilterPanel() {
 
       <Accordion 
         multiple
-        defaultValue={["levels", "role", "company", "comp", "yoe", "verified", "currency", "location"]} 
+        defaultValue={[]} 
         className="w-full space-y-3"
       >
         {/* 1. Normalized Level */}

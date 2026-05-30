@@ -9,7 +9,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { CommandSearch } from "@/components/shared/CommandSearch";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -54,7 +53,6 @@ export default function RootLayout({
                 </div>
                 <BottomNav />
               </div>
-              <CommandSearch />
               <Toaster richColors closeButton />
             </TooltipProvider>
           </ThemeProvider>

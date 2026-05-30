@@ -1,11 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Search, BarChart3, Moon, Sun, GitCompare, Laptop } from "lucide-react";
+import { BarChart3, Moon, Sun, GitCompare, Laptop } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,21 +11,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useComparisonStore } from "@/lib/hooks/useComparisonStore";
-import { useSearchStore } from "@/lib/hooks/useSearchStore";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { CommandSearch, MobileSearchButton } from "@/components/shared/CommandSearch";
 
 export function Header() {
   const { setTheme, theme } = useTheme();
   const comparisonCount = useComparisonStore((state) => state.slots.length);
-  const setOpen = useSearchStore((state) => state.setOpen);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
   return (
     <header className="sticky top-0 z-50 flex h-14 w-full shrink-0 items-center justify-between border-b border-border bg-background/95 px-3 sm:px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex items-center gap-2 md:w-[260px]">
+      <div className="flex items-center gap-2 md:w-[200px]">
         <Link href="/" className="flex items-center gap-2 font-semibold text-brand-primary">
           <BarChart3 className="h-5 w-5 shrink-0" />
           <span className="hidden text-lg tracking-tight md:inline-block text-foreground">
@@ -37,32 +33,13 @@ export function Header() {
         </Link>
       </div>
 
+      {/* Center: inline search */}
       <div className="flex flex-1 items-center justify-center px-2 md:px-8">
-        <div className="relative w-full max-w-md hidden md:flex items-center">
-          <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search role, company, or level..."
-            className="h-9 w-full rounded-md bg-muted/50 pl-9 pr-12 focus-visible:bg-background cursor-pointer"
-            onClick={() => setOpen(true)}
-            readOnly
-          />
-          <div className="absolute right-1.5 flex h-5 items-center rounded border border-border bg-background px-1.5 text-[10px] font-medium text-muted-foreground">
-            <span className="text-xs">⌘</span>K
-          </div>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          onClick={() => setOpen(true)}
-          aria-label="Search"
-        >
-          <Search className="h-5 w-5 text-muted-foreground" />
-        </Button>
+        <CommandSearch />
+        <MobileSearchButton />
       </div>
 
-      <div className="flex items-center gap-1 sm:gap-2 md:w-[260px] justify-end">
+      <div className="flex items-center gap-1 sm:gap-2 md:w-[200px] justify-end">
         {/* Desktop compare */}
         <Link
           href="/compare"

@@ -111,38 +111,6 @@ interface SalaryTableProps {
   onSortingChange?: OnChangeFn<SortingState>;
 }
 
-// ─── Scroll position indicator ────────────────────────────────────────────────
-
-function ScrollPositionBar({
-  scrollTop,
-  totalHeight,
-  containerHeight,
-}: {
-  scrollTop: number;
-  totalHeight: number;
-  containerHeight: number;
-}) {
-  if (totalHeight <= containerHeight) return null;
-
-  const thumbHeight = Math.max(
-    40,
-    (containerHeight / totalHeight) * containerHeight
-  );
-  const maxScroll = totalHeight - containerHeight;
-  const thumbTop = (scrollTop / maxScroll) * (containerHeight - thumbHeight);
-
-  return (
-    <div
-      className="absolute right-0 top-0 bottom-0 w-1 bg-border/50 z-30 rounded-full"
-      aria-hidden="true"
-    >
-      <div
-        className="absolute w-full bg-muted-foreground/40 rounded-full transition-none"
-        style={{ height: thumbHeight, top: thumbTop }}
-      />
-    </div>
-  );
-}
 
 export { SalaryTableSkeleton };
 
@@ -162,7 +130,6 @@ export function SalaryTable({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({});
   const [selectedRecord, setSelectedRecord] = React.useState<CompensationRecord | null>(null);
-  const [scrollTop, setScrollTop] = React.useState(0);
 
   const addToComparison = useComparisonStore(
     React.useCallback((state) => state.addToComparison, [])
@@ -493,11 +460,11 @@ export function SalaryTable({
       {
         id: "actions",
         cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-1.5">
+          <div className="flex items-center justify-end gap-0.5">
             <Button
               variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-primary"
+              size="icon-sm"
+              className="h-6 w-6 text-muted-foreground hover:text-primary border-0 rounded-md"
               aria-label={`Add ${row.original.company.name} to comparison`}
               title="Add to compare"
               onClick={(e) => handleCompareClick(e, row.original)}
@@ -506,8 +473,8 @@ export function SalaryTable({
             </Button>
             <Button
               variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground"
+              size="icon-sm"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground border-0 rounded-md"
               aria-label={`Open detailed record for ${row.original.company.name}`}
               title="Open detail"
               onClick={(e) => handleDetailClick(e, row.original)}
@@ -516,7 +483,7 @@ export function SalaryTable({
             </Button>
           </div>
         ),
-        size: 80,
+        size: 72,
         enableHiding: false,
         enableSorting: false,
       },
@@ -652,10 +619,9 @@ export function SalaryTable({
 
   const headerContainerRef = React.useRef<HTMLDivElement>(null);
 
-  // Track scroll position for the indicator bar and sync header scroll
+  // Sync header horizontal scroll when body scrolls
   const handleScroll = React.useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
-      setScrollTop(e.currentTarget.scrollTop);
       if (headerContainerRef.current) {
         headerContainerRef.current.scrollLeft = e.currentTarget.scrollLeft;
       }
@@ -961,13 +927,6 @@ export function SalaryTable({
                 )}
               </tbody>
             </table>
-
-            {/* Scroll position indicator */}
-            <ScrollPositionBar
-              scrollTop={scrollTop}
-              totalHeight={totalHeight}
-              containerHeight={Math.min(totalHeight, 600)}
-            />
           </div>
         )}
 
