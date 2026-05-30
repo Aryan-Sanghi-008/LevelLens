@@ -1,6 +1,6 @@
 import { MOCK_COMPANIES, MockCompany } from "./mock/companies";
 import { MOCK_SALARIES } from "./mock/salaries";
-import { CompanyProfile, NormalizedLevel } from "@/types";
+import { CompanyProfile, NormalizedLevel, CompensationRecord } from "@/types";
 import { getPercentileBand } from "@/lib/formatters";
 
 export interface ExtendedCompanyProfile extends CompanyProfile {
@@ -15,11 +15,41 @@ export interface ExtendedCompanyProfile extends CompanyProfile {
   }>;
 }
 
-export function getCompanyProfile(slug: string): ExtendedCompanyProfile | null {
-  const meta = MOCK_COMPANIES.find(c => c.slug === slug);
+export function mergeCompanies(
+  submissions: CompensationRecord[],
+  baseCompanies: MockCompany[] = MOCK_COMPANIES
+): MockCompany[] {
+  const c = [...baseCompanies];
+  const seenSlugs = new Set(c.map((comp) => comp.slug));
+  for (const sub of submissions) {
+    if (sub.company && !seenSlugs.has(sub.company.slug)) {
+      c.push({
+        name: sub.company.name,
+        slug: sub.company.slug,
+        logo: sub.company.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(sub.company.name)}&background=random&color=fff&rounded=true`,
+        industry: sub.company.industry || "Technology",
+        size: sub.company.size || "Unknown",
+        hq: "Not Specified",
+        indiaPresence: true,
+        description: `User-submitted profile for ${sub.company.name}`,
+        founded: new Date().getFullYear(),
+        funding: "Unknown",
+      });
+      seenSlugs.add(sub.company.slug);
+    }
+  }
+  return c;
+}
+
+export function getCompanyProfile(
+  slug: string, 
+  salaries: CompensationRecord[] = MOCK_SALARIES, 
+  companies: MockCompany[] = MOCK_COMPANIES
+): ExtendedCompanyProfile | null {
+  const meta = companies.find(c => c.slug === slug);
   if (!meta) return null;
 
-  const records = MOCK_SALARIES.filter(r => r.company.slug === slug);
+  const records = salaries.filter(r => r.company.slug === slug);
   if (records.length === 0) return null;
 
   const totalComps = records.map(r => r.totalCompensation);
@@ -84,14 +114,17 @@ export function getCompanyProfile(slug: string): ExtendedCompanyProfile | null {
   };
 }
 
-export function getAllCompanyProfiles(): ExtendedCompanyProfile[] {
-  return MOCK_COMPANIES.map(c => getCompanyProfile(c.slug)).filter(Boolean) as ExtendedCompanyProfile[];
+export function getAllCompanyProfiles(
+  salaries: CompensationRecord[] = MOCK_SALARIES, 
+  companies: MockCompany[] = MOCK_COMPANIES
+): ExtendedCompanyProfile[] {
+  return companies.map(c => getCompanyProfile(c.slug, salaries, companies)).filter(Boolean) as ExtendedCompanyProfile[];
 }
 
-export function getGlobalLevelMedians(): Record<NormalizedLevel, number> {
+export function getGlobalLevelMedians(salaries: CompensationRecord[] = MOCK_SALARIES): Record<NormalizedLevel, number> {
   const medians = {} as Record<NormalizedLevel, number>;
   Object.values(NormalizedLevel).forEach(level => {
-    const records = MOCK_SALARIES.filter(r => r.normalizedLevel === level);
+    const records = salaries.filter(r => r.normalizedLevel === level);
     medians[level as NormalizedLevel] = records.length > 0 ? getPercentileBand(0, records.map(r => r.totalCompensation)).p50 : 0;
   });
   return medians;

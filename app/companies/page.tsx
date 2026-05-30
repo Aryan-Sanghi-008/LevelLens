@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { getAllCompanyProfiles } from "@/lib/data/companyStats";
+import { getAllCompanyProfiles, mergeCompanies } from "@/lib/data/companyStats";
 import { CompanyCard } from "@/components/data/CompanyCard";
 import { Input } from "@/components/ui/input";
 import { Search, SlidersHorizontal } from "lucide-react";
+import { useSubmissionStore } from "@/lib/hooks/useSubmissionStore";
+import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -14,7 +16,13 @@ const INDUSTRIES = ["All", "Technology", "Finance", "Consulting", "E-commerce", 
 const SIZES = ["All", "1,000+", "5,000+", "10,000+", "50,000+", "100,000+"];
 
 export default function CompaniesPage() {
-  const allProfiles = useMemo(() => getAllCompanyProfiles(), []);
+  const submissions = useSubmissionStore((s) => s.submissions);
+
+  const allProfiles = useMemo(() => {
+    const allSalaries = [...submissions, ...MOCK_SALARIES];
+    const allCompanies = mergeCompanies(submissions);
+    return getAllCompanyProfiles(allSalaries, allCompanies);
+  }, [submissions]);
   
   const [search, setSearch] = useState("");
   const [industryFilter, setIndustryFilter] = useState("All");

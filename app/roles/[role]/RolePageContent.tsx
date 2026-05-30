@@ -4,7 +4,10 @@ import React, { Suspense } from "react";
 import { useQueryState } from "nuqs";
 import { CompanyLogo } from "@/components/shared/CompanyLogo";
 import dynamic from "next/dynamic";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, slugify } from "@/lib/formatters";
+import { useSubmissionStore } from "@/lib/hooks/useSubmissionStore";
+import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
+import { MOCK_COMPANIES } from "@/lib/data/mock/companies";
 import {
   LevelLadderSkeleton,
   SalaryTableSkeleton,
@@ -13,9 +16,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Briefcase, Building2, Calendar, Users } from "lucide-react";
-import { CompensationRecord } from "@/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { mergeCompanies } from "@/lib/data/companyStats";
 
 const LevelLadder = dynamic(
   () => import("@/components/charts/LevelLadder").then((m) => m.LevelLadder),
@@ -28,40 +31,79 @@ const SalaryTable = dynamic(
 );
 
 interface RolePageContentProps {
-  roleName: string;
-  records: CompensationRecord[];
-  totalRecords: number;
-  overallTopCompany: string;
-  minYear: number;
-  maxYear: number;
-  topCompanies: {
-    meta: {
-      name: string;
-      slug: string;
-      logo?: string;
-      industry?: string;
-      size?: string;
-    };
-    median: number;
-    count: number;
-  }[];
+  slug: string;
   initialCompany: string;
 }
 
 export function RolePageContent({
-  roleName,
-  records,
-  totalRecords,
-  overallTopCompany,
-  minYear,
-  maxYear,
-  topCompanies,
+  slug,
   initialCompany,
 }: RolePageContentProps) {
+  const submissions = useSubmissionStore((s) => s.submissions);
+  
+  const { allSalaries, allCompanies } = React.useMemo(() => {
+    const s = [...submissions, ...MOCK_SALARIES];
+    const c = mergeCompanies(submissions);
+    return { allSalaries: s, allCompanies: c };
+  }, [submissions]);
+
+  const stats = React.useMemo(() => {
+    const matchingRoleRecord = allSalaries.find((s) => slugify(s.role) === slug);
+    if (!matchingRoleRecord) return null;
+
+    const roleName = matchingRoleRecord.role;
+    const records = allSalaries.filter((s) => s.role === roleName);
+
+    const totalRecords = records.length;
+    const sortedDates = records.map((r) => new Date(r.reportedAt).getTime()).sort((a, b) => a - b);
+    const minYear = new Date(sortedDates[0]).getFullYear();
+    const maxYear = new Date(sortedDates[sortedDates.length - 1]).getFullYear();
+
+    const companyMedians = new Map<string, number[]>();
+    for (const r of records) {
+      if (!companyMedians.has(r.company.slug)) companyMedians.set(r.company.slug, []);
+      companyMedians.get(r.company.slug)!.push(r.totalCompensation);
+    }
+
+    const topCompanies = Array.from(companyMedians.entries())
+      .map(([cSlug, comps]) => {
+        const sorted = [...comps].sort((a, b) => a - b);
+        const median = sorted[Math.floor(sorted.length / 2)];
+        const meta = allCompanies.find((c) => c.slug === cSlug);
+        return { meta, median, count: comps.length };
+      })
+      .filter((c): c is { meta: typeof MOCK_COMPANIES[number]; median: number; count: number } => !!c.meta)
+      .sort((a, b) => b.median - a.median)
+      .slice(0, 5);
+
+    const overallTopCompany = topCompanies[0]?.meta?.name || "N/A";
+
+    return {
+      roleName,
+      records,
+      totalRecords,
+      minYear,
+      maxYear,
+      topCompanies,
+      overallTopCompany,
+    };
+  }, [slug, allSalaries, allCompanies]);
+
   const [selectedCompany, setSelectedCompany] = useQueryState("company", {
     defaultValue: initialCompany,
     shallow: true,
   });
+
+  if (!stats) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <h2 className="text-2xl font-bold">Role Not Found</h2>
+        <p className="text-muted-foreground mt-2">The role you are looking for does not exist or has no data yet.</p>
+      </div>
+    );
+  }
+
+  const { roleName, records, totalRecords, overallTopCompany, minYear, maxYear, topCompanies } = stats;
 
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto w-full">

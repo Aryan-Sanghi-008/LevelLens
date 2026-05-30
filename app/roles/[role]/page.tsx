@@ -1,7 +1,5 @@
 import React, { Suspense } from "react";
-import { notFound } from "next/navigation";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
-import { MOCK_COMPANIES } from "@/lib/data/mock/companies";
 import { slugify } from "@/lib/formatters";
 import { roleProfileSearchParamsCache } from "@/lib/searchParams";
 import { RolePageContent } from "./RolePageContent";
@@ -21,38 +19,6 @@ export default function RolePage({
   searchParams: Record<string, string | string[] | undefined>;
 }) {
   const { role: slug } = params;
-
-  const matchingRoleRecord = MOCK_SALARIES.find((s) => slugify(s.role) === slug);
-  if (!matchingRoleRecord) {
-    notFound();
-  }
-
-  const roleName = matchingRoleRecord.role;
-  const records = MOCK_SALARIES.filter((s) => s.role === roleName);
-
-  const totalRecords = records.length;
-  const sortedDates = records.map((r) => new Date(r.reportedAt).getTime()).sort((a, b) => a - b);
-  const minDate = new Date(sortedDates[0]);
-  const maxDate = new Date(sortedDates[sortedDates.length - 1]);
-
-  const companyMedians = new Map<string, number[]>();
-  for (const r of records) {
-    if (!companyMedians.has(r.company.slug)) companyMedians.set(r.company.slug, []);
-    companyMedians.get(r.company.slug)!.push(r.totalCompensation);
-  }
-
-  const topCompanies = Array.from(companyMedians.entries())
-    .map(([cSlug, comps]) => {
-      const sorted = [...comps].sort((a, b) => a - b);
-      const median = sorted[Math.floor(sorted.length / 2)];
-      const meta = MOCK_COMPANIES.find((c) => c.slug === cSlug);
-      return { meta, median, count: comps.length };
-    })
-    .filter((c): c is { meta: typeof MOCK_COMPANIES[number]; median: number; count: number } => !!c.meta)
-    .sort((a, b) => b.median - a.median)
-    .slice(0, 5);
-
-  const overallTopCompany = topCompanies[0]?.meta?.name || "N/A";
   const { company } = roleProfileSearchParamsCache.parse(searchParams);
 
   return (
@@ -63,13 +29,7 @@ export default function RolePage({
         </div>
       }>
         <RolePageContent
-          roleName={roleName}
-          records={records}
-          totalRecords={totalRecords}
-          overallTopCompany={overallTopCompany}
-          minYear={minDate.getFullYear()}
-          maxYear={maxDate.getFullYear()}
-          topCompanies={topCompanies}
+          slug={slug}
           initialCompany={company}
         />
       </Suspense>

@@ -5,12 +5,12 @@ import { CompanyLogo } from "@/components/shared/CompanyLogo";
 import { useQueryStates } from "nuqs";
 import { filterParsers } from "@/lib/searchParams";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
-import { MOCK_COMPANIES } from "@/lib/data/mock/companies";
-
 import { NormalizedLevel } from "@/types";
 import { formatCurrency } from "@/lib/formatters";
 
 import { ActiveFilters } from "./ActiveFilters";
+import { useSubmissionStore } from "@/lib/hooks/useSubmissionStore";
+import { mergeCompanies } from "@/lib/data/companyStats";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,11 +22,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Check, ShieldCheck, Landmark, MapPin, Briefcase, Building, Layers, Sparkles, Sliders } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Pre-calculate facet lists
-const ALL_ROLES = Array.from(new Set(MOCK_SALARIES.map(s => s.role))).sort();
-const ALL_CITIES = Array.from(new Set(MOCK_SALARIES.map(s => s.location.city).filter(Boolean))) as string[];
-const ALL_REGIONS = Array.from(new Set(MOCK_SALARIES.map(s => s.location.region).filter(Boolean))) as string[];
-const ALL_COUNTRIES = Array.from(new Set(MOCK_SALARIES.map(s => s.location.country).filter(Boolean))) as string[];
 
 export function FilterPanel() {
   const [filters, setFilters] = useQueryStates(filterParsers);
@@ -38,8 +33,16 @@ export function FilterPanel() {
   const [companySearch, setCompanySearch] = React.useState("");
   const [isCompaniesExpanded, setIsCompaniesExpanded] = React.useState(false);
 
+  const submissions = useSubmissionStore((s) => s.submissions);
+  const allSalaries = React.useMemo(() => [...submissions, ...MOCK_SALARIES], [submissions]);
+
+  const ALL_ROLES = React.useMemo(() => Array.from(new Set(allSalaries.map(s => s.role))).sort(), [allSalaries]);
+  const ALL_CITIES = React.useMemo(() => Array.from(new Set(allSalaries.map(s => s.location.city).filter(Boolean))) as string[], [allSalaries]);
+  const ALL_REGIONS = React.useMemo(() => Array.from(new Set(allSalaries.map(s => s.location.region).filter(Boolean))) as string[], [allSalaries]);
+  const ALL_COUNTRIES = React.useMemo(() => Array.from(new Set(allSalaries.map(s => s.location.country).filter(Boolean))) as string[], [allSalaries]);
+
   // Normalized Level Count
-  const getLevelCount = (level: string) => MOCK_SALARIES.filter(s => s.normalizedLevel === level).length;
+  const getLevelCount = (level: string) => allSalaries.filter(s => s.normalizedLevel === level).length;
 
   const toggleArrayItem = (array: string[], item: string) => {
     return array.includes(item)
@@ -56,16 +59,20 @@ export function FilterPanel() {
     return ALL_ROLES.filter(role => 
       role.toLowerCase().includes(roleSearch.toLowerCase())
     );
-  }, [roleSearch]);
+  }, [roleSearch, ALL_ROLES]);
 
   const displayedRoles = isRolesExpanded ? filteredRoles : filteredRoles.slice(0, 5);
 
   // Company Filtering
+  const allCompanies = React.useMemo(() => {
+    return mergeCompanies(submissions);
+  }, [submissions]);
+
   const filteredCompanies = React.useMemo(() => {
-    return MOCK_COMPANIES.filter(company => 
+    return allCompanies.filter(company => 
       company.name.toLowerCase().includes(companySearch.toLowerCase())
     );
-  }, [companySearch]);
+  }, [companySearch, allCompanies]);
 
   const displayedCompanies = isCompaniesExpanded ? filteredCompanies : filteredCompanies.slice(0, 5);
 

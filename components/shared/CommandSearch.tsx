@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { CompanyLogo } from "@/components/shared/CompanyLogo";
 import { useRouter } from "next/navigation";
 import { useSearchStore } from "@/lib/hooks/useSearchStore";
-import { MOCK_COMPANIES } from "@/lib/data/mock/companies";
+import { useSubmissionStore } from "@/lib/hooks/useSubmissionStore";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
 import { NormalizedLevel } from "@/types";
 import {
@@ -19,6 +19,7 @@ import {
 import { getLevelColor, getLevelBadgeVariant } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { mergeCompanies } from "@/lib/data/companyStats";
 
 const LEVEL_DESCRIPTIONS: Record<NormalizedLevel, string> = {
   [NormalizedLevel.INTERN]: "Students or fresh graduates on training",
@@ -60,16 +61,23 @@ export function CommandSearch() {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const submissions = useSubmissionStore((s) => s.submissions);
+  const allSalaries = useMemo(() => [...submissions, ...MOCK_SALARIES], [submissions]);
+
   // Calculate unique roles and counts
   const roleStats = useMemo(() => {
     const stats: Record<string, number> = {};
-    for (const salary of MOCK_SALARIES) {
+    for (const salary of allSalaries) {
       stats[salary.role] = (stats[salary.role] || 0) + 1;
     }
     return Object.entries(stats)
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count);
-  }, []);
+  }, [allSalaries]);
+
+  const allCompanies = useMemo(() => {
+    return mergeCompanies(submissions);
+  }, [submissions]);
 
   // Keyboard shortcut (CMD+K or CTRL+K)
   useEffect(() => {
@@ -193,8 +201,8 @@ export function CommandSearch() {
     [q, roleStats]
   );
   const filteredCompanies = useMemo(
-    () => q ? MOCK_COMPANIES.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 5) : [],
-    [q]
+    () => q ? allCompanies.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 5) : [],
+    [q, allCompanies]
   );
   const filteredLevels = useMemo(
     () => q

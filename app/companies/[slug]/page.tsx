@@ -1,7 +1,5 @@
 import React, { Suspense } from "react";
-import { notFound } from "next/navigation";
 import { MOCK_COMPANIES } from "@/lib/data/mock/companies";
-import { getCompanyProfile } from "@/lib/data/companyStats";
 import { CompanyProfileSkeleton, ChartSkeleton } from "@/components/shared/Skeletons";
 import { CompanyProfileHero } from "./_sections/CompanyProfileHero";
 import { CompanyProfileTabs } from "./_sections/CompanyProfileTabs";
@@ -21,10 +19,6 @@ export default function CompanyProfilePage({
   searchParams: Record<string, string | string[] | undefined>;
 }) {
   const { slug } = params;
-
-  if (!getCompanyProfile(slug)) {
-    notFound();
-  }
 
   const { tab, level } = companyProfileSearchParamsCache.parse(searchParams);
 

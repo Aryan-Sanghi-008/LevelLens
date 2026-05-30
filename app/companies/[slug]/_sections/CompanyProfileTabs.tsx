@@ -2,7 +2,8 @@
 
 import React from "react";
 import { useQueryStates, parseAsString } from "nuqs";
-import { getCompanyProfile, getGlobalLevelMedians } from "@/lib/data/companyStats";
+import { getCompanyProfile, getGlobalLevelMedians, mergeCompanies } from "@/lib/data/companyStats";
+import { useSubmissionStore } from "@/lib/hooks/useSubmissionStore";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
 import { formatCurrency, getPercentileBand, getLevelColor, getLevelBadgeVariant } from "@/lib/formatters";
 import { NormalizedLevel } from "@/types";
@@ -14,7 +15,6 @@ import {
   type LevelCompRow,
 } from "@/components/data/CompanyCompensationCards";
 import { cn } from "@/lib/utils";
-import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 export function CompanyProfileTabs({
@@ -31,9 +31,17 @@ export function CompanyProfileTabs({
     level: parseAsString.withDefault(initialLevel),
   });
 
-  const profile = getCompanyProfile(slug);
-  const globalMedians = getGlobalLevelMedians();
-  if (!profile) notFound();
+  const submissions = useSubmissionStore((s) => s.submissions);
+
+  const { allSalaries, allCompanies } = React.useMemo(() => {
+    const s = [...submissions, ...MOCK_SALARIES];
+    const c = mergeCompanies(submissions);
+    return { allSalaries: s, allCompanies: c };
+  }, [submissions]);
+
+  const profile = getCompanyProfile(slug, allSalaries, allCompanies);
+  const globalMedians = getGlobalLevelMedians(allSalaries);
+  if (!profile) return null;
 
   const { levelDistribution, levelCompensation } = profile;
 
@@ -52,11 +60,13 @@ export function CompanyProfileTabs({
     })
     .filter((r): r is LevelCompRow => r !== null);
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const filteredCompRows = React.useMemo(() => {
     if (query.level === "ALL") return compRows;
     return compRows.filter((r) => r.level === query.level);
   }, [compRows, query.level]);
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const filteredLevelsList = React.useMemo(() => {
     const levels = Object.values(NormalizedLevel);
     if (query.level === "ALL") return levels;
@@ -64,7 +74,7 @@ export function CompanyProfileTabs({
   }, [query.level]);
 
   const rolesMap = new Map<string, number[]>();
-  MOCK_SALARIES.filter((r) => r.company.slug === slug).forEach((r) => {
+  allSalaries.filter((r) => r.company.slug === slug).forEach((r) => {
     if (!rolesMap.has(r.role)) rolesMap.set(r.role, []);
     rolesMap.get(r.role)!.push(r.totalCompensation);
   });

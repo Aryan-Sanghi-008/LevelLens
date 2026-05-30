@@ -1,5 +1,10 @@
+"use client";
+
+import React, { useMemo } from "react";
 import { CompanyLogo } from "@/components/shared/CompanyLogo";
-import { getCompanyProfile } from "@/lib/data/companyStats";
+import { getCompanyProfile, mergeCompanies } from "@/lib/data/companyStats";
+import { useSubmissionStore } from "@/lib/hooks/useSubmissionStore";
+import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
 import { formatCurrency, getLevelBadgeVariant, getLevelColor } from "@/lib/formatters";
 import { NormalizedLevel } from "@/types";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -15,11 +20,24 @@ import {
   Database,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { notFound } from "next/navigation";
 
-export async function CompanyProfileHero({ slug }: { slug: string }) {
-  const profile = getCompanyProfile(slug);
-  if (!profile) notFound();
+export function CompanyProfileHero({ slug }: { slug: string }) {
+  const submissions = useSubmissionStore((s) => s.submissions);
+
+  const { allSalaries, allCompanies } = useMemo(() => {
+    const s = [...submissions, ...MOCK_SALARIES];
+    const c = mergeCompanies(submissions);
+    return { allSalaries: s, allCompanies: c };
+  }, [submissions]);
+
+  const profile = getCompanyProfile(slug, allSalaries, allCompanies);
+  
+  if (!profile) return (
+    <div className="flex flex-col items-center justify-center py-20">
+      <h2 className="text-2xl font-bold">Company Not Found</h2>
+      <p className="text-muted-foreground mt-2">The company you are looking for does not exist or has no data yet.</p>
+    </div>
+  );
 
   const { meta, medianTotal, p90Total, dataPointCount, levelDistribution } = profile;
   const topLevelEntry = Object.entries(levelDistribution).sort((a, b) => b[1] - a[1])[0];

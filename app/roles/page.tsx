@@ -3,15 +3,23 @@
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { PageShell } from "@/components/layout/PageShell";
+import { useSubmissionStore } from "@/lib/hooks/useSubmissionStore";
 import { MOCK_SALARIES } from "@/lib/data/mock/salaries";
-import { MOCK_COMPANIES } from "@/lib/data/mock/companies";
 import { slugify, formatCurrency } from "@/lib/formatters";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Search, Briefcase, Building2, TrendingUp, ArrowRight } from "lucide-react";
+import { mergeCompanies } from "@/lib/data/companyStats";
 
 export default function RolesPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const submissions = useSubmissionStore((s) => s.submissions);
+
+  const { allSalaries, allCompanies } = useMemo(() => {
+    const s = [...submissions, ...MOCK_SALARIES];
+    const c = mergeCompanies(submissions);
+    return { allSalaries: s, allCompanies: c };
+  }, [submissions]);
 
   // Aggregate stats per role
   const roleStats = useMemo(() => {
@@ -22,7 +30,7 @@ export default function RolesPage() {
       companies: Map<string, number[]>;
     }>();
 
-    for (const record of MOCK_SALARIES) {
+    for (const record of allSalaries) {
       if (!statsMap.has(record.role)) {
         statsMap.set(record.role, {
           role: record.role,
@@ -60,7 +68,7 @@ export default function RolesPage() {
         }
       }
 
-      const topCompanyMeta = MOCK_COMPANIES.find((c) => c.slug === topCompanySlug);
+      const topCompanyMeta = allCompanies.find((c) => c.slug === topCompanySlug);
 
       return {
         role: item.role,
@@ -69,7 +77,7 @@ export default function RolesPage() {
         topCompany: topCompanyMeta,
       };
     }).sort((a, b) => b.count - a.count);
-  }, []);
+  }, [allSalaries, allCompanies]);
 
   // Filter roles based on search
   const filteredRoles = useMemo(() => {
@@ -80,9 +88,9 @@ export default function RolesPage() {
 
   // Overall stats
   const overallStats = useMemo(() => {
-    const totalReports = MOCK_SALARIES.length;
+    const totalReports = allSalaries.length;
     const uniqueRolesCount = roleStats.length;
-    const sortedAll = MOCK_SALARIES.map((s) => s.totalCompensation).sort((a, b) => a - b);
+    const sortedAll = allSalaries.map((s) => s.totalCompensation).sort((a, b) => a - b);
     const overallMedian = sortedAll[Math.floor(sortedAll.length / 2)] || 0;
 
     return { totalReports, uniqueRolesCount, overallMedian };
