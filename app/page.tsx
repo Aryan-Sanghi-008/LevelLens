@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, Suspense } from "react";
+import Link from "next/link";
 import type { SortingState } from "@tanstack/react-table";
 import { PageShell } from "@/components/layout/PageShell";
 import { SalaryTable } from "@/components/data/SalaryTable";
@@ -82,9 +83,62 @@ function HomeContent() {
     return sorted[Math.floor(sorted.length / 2)].totalCompensation;
   }, [data]);
 
+  const handleExportCSV = React.useCallback(() => {
+    if (!data || data.length === 0) return;
+
+    const headers = [
+      "Company",
+      "Industry",
+      "Role",
+      "Title",
+      "Level",
+      "City",
+      "Country",
+      "Base Salary",
+      "Stock Per Year",
+      "Bonus",
+      "Total Compensation",
+      "Experience (YoE)",
+      "Reported At",
+      "Verified"
+    ];
+    
+    const csvRows = [headers.join(",")];
+
+    for (const row of data) {
+      const values = [
+        `"${row.company.name.replace(/"/g, '""')}"`,
+        `"${(row.company.industry || "").replace(/"/g, '""')}"`,
+        `"${row.role.replace(/"/g, '""')}"`,
+        `"${(row.rawTitle || "").replace(/"/g, '""')}"`,
+        `"${row.normalizedLevel}"`,
+        `"${row.location.city.replace(/"/g, '""')}"`,
+        `"${row.location.country.replace(/"/g, '""')}"`,
+        row.baseSalary,
+        row.stockPerYear,
+        row.bonus,
+        row.totalCompensation,
+        row.yearsOfExperience,
+        row.reportedAt,
+        row.verified
+      ];
+      csvRows.push(values.join(","));
+    }
+
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `levellens_salaries_${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [data]);
+
   const filterTabs = (
     <Tabs defaultValue="filters" className="w-full">
-      <TabsList className="w-full grid grid-cols-2 mb-4 relative z-20 bg-muted">
+      <TabsList className="w-full grid grid-cols-2 mb-4 sticky top-0 z-30 bg-muted/95 backdrop-blur-xs shadow-sm border border-border/40">
         <TabsTrigger value="filters">Filters</TabsTrigger>
         <TabsTrigger value="location">Location</TabsTrigger>
       </TabsList>
@@ -104,13 +158,15 @@ function HomeContent() {
       description="Explore detailed compensation data across top tech companies, mapped to normalized levels."
       actions={
         <>
-          <Button variant="outline" size="sm" className="hidden sm:flex">
+          <Button variant="outline" size="sm" className="hidden sm:flex" onClick={handleExportCSV}>
             <Download className="mr-2 h-4 w-4" />
             Export CSV
           </Button>
-          <Button size="sm" className="hidden sm:inline-flex">
-            Add Salary
-          </Button>
+          <Link href="/submit">
+            <Button size="sm" className="hidden sm:inline-flex">
+              Add Salary
+            </Button>
+          </Link>
         </>
       }
     >

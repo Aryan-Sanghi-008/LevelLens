@@ -5,13 +5,7 @@ import { Search, BarChart3, Moon, Sun, GitCompare, Laptop } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,28 +15,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useComparisonStore } from "@/lib/hooks/useComparisonStore";
 import { useSearchStore } from "@/lib/hooks/useSearchStore";
-import { useQueryStates } from "nuqs";
-import { filterParsers } from "@/lib/searchParams";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  USD: "$",
-  INR: "₹",
-  GBP: "£",
-};
 
 export function Header() {
   const { setTheme, theme } = useTheme();
   const comparisonCount = useComparisonStore((state) => state.slots.length);
   const setOpen = useSearchStore((state) => state.setOpen);
-  const [filters, setFilters] = useQueryStates(filterParsers);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
-
-  const currency = filters.currency || "USD";
-  const currencySymbol = CURRENCY_SYMBOLS[currency] ?? "$";
 
   return (
     <header className="sticky top-0 z-50 flex h-14 w-full shrink-0 items-center justify-between border-b border-border bg-background/95 px-3 sm:px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -81,39 +63,6 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2 md:w-[260px] justify-end">
-        {/* Desktop currency */}
-        <Select
-          value={currency}
-          onValueChange={(val) => val && setFilters({ currency: val })}
-        >
-          <SelectTrigger className="hidden md:flex h-8 w-[65px] border-none bg-transparent shadow-none hover:bg-muted/50 focus:ring-0">
-            <SelectValue placeholder="Cur" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="USD">$</SelectItem>
-            <SelectItem value="INR">₹</SelectItem>
-            <SelectItem value="GBP">£</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Mobile currency — icon only */}
-        <Select
-          value={currency}
-          onValueChange={(val) => val && setFilters({ currency: val })}
-        >
-          <SelectTrigger
-            className="md:hidden h-8 w-8 border-none bg-transparent shadow-none p-0 justify-center [&>svg]:hidden"
-            aria-label="Currency"
-          >
-            <span className="text-sm font-semibold">{currencySymbol}</span>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="USD">USD ($)</SelectItem>
-            <SelectItem value="INR">INR (₹)</SelectItem>
-            <SelectItem value="GBP">GBP (£)</SelectItem>
-          </SelectContent>
-        </Select>
-
         {/* Desktop compare */}
         <Link
           href="/compare"

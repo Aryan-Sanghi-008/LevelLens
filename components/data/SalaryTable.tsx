@@ -805,7 +805,7 @@ export function SalaryTable({
                         className={cn(
                           "h-10 px-3 text-left text-xs font-semibold text-muted-foreground whitespace-nowrap",
                           isSticky &&
-                            cn("sticky z-20 shadow-[1px_0_0_0_hsl(var(--border))]", leftOffset, idx === 0 ? "bg-muted/80" : "bg-muted/60")
+                            cn("sticky z-20 shadow-[1px_0_0_0_hsl(var(--border))]", leftOffset, "bg-muted")
                         )}
                       >
                         {header.isPlaceholder
@@ -872,95 +872,95 @@ export function SalaryTable({
             style={{ height: Math.min(totalHeight, 600) }}
             onScroll={handleScroll}
           >
-            {/* Total height spacer */}
-            <div style={{ height: totalHeight, width: "100%", position: "relative" }}>
-              {/* Virtual rows */}
-              <table
-                role="grid"
-                aria-colcount={columns.length}
-                aria-rowcount={rows.length + 1}
-                aria-busy={isPending}
-                className="w-full min-w-[860px] border-collapse absolute top-0 left-0"
-                style={{ tableLayout: "fixed" }}
-              >
-                <colgroup>
-                  {columns.map((col) => (
-                    <col
-                      key={"id" in col ? col.id : (col as { accessorKey: string }).accessorKey}
-                      style={{ width: col.size ?? 120 }}
-                    />
-                  ))}
-                </colgroup>
-                <tbody>
-                  {virtualItems.map((virtualRow) => {
-                    const row = rows[virtualRow.index];
-                    if (!row) return null;
-                    const isSelfReported = row.original.tags?.includes("self-reported");
+            {/* Virtual rows */}
+            <table
+              role="grid"
+              aria-colcount={columns.length}
+              aria-rowcount={rows.length + 1}
+              aria-busy={isPending}
+              className="w-full min-w-[860px] border-collapse"
+              style={{ tableLayout: "fixed" }}
+            >
+              <colgroup>
+                {columns.map((col) => (
+                  <col
+                    key={"id" in col ? col.id : (col as { accessorKey: string }).accessorKey}
+                    style={{ width: col.size ?? 120 }}
+                  />
+                ))}
+              </colgroup>
+              <tbody>
+                {virtualItems.length > 0 && virtualItems[0].start > 0 && (
+                  <tr style={{ height: virtualItems[0].start }}>
+                    <td colSpan={columns.length} style={{ padding: 0, border: 0 }} />
+                  </tr>
+                )}
+                {virtualItems.map((virtualRow) => {
+                  const row = rows[virtualRow.index];
+                  if (!row) return null;
+                  const isSelfReported = row.original.tags?.includes("self-reported");
 
-                    return (
-                      <tr
-                        key={row.id}
-                        role="row"
-                        aria-selected={row.getIsSelected()}
-                        data-index={virtualRow.index}
-                        data-state={row.getIsSelected() ? "selected" : undefined}
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          width: "100%",
-                          height: ROW_HEIGHT,
-                          transform: `translateY(${virtualRow.start}px)`,
-                        }}
-                        className={cn(
-                          "group cursor-pointer border-b border-border/50 transition-colors hover:bg-muted/40",
-                          row.getIsSelected() && "bg-primary/5",
-                          isSelfReported && "bg-amber-50/40 dark:bg-amber-500/5"
-                        )}
-                        onClick={() => handleRowClick(row)}
-                      >
-                        {row.getVisibleCells().map((cell, idx) => {
-                          const isSticky = idx === 0 || idx === 1;
-                          const leftOffset = idx === 1 ? "left-[40px]" : "left-0";
-                          const isCellActive = activeCell
-                            ? activeCell.rowIndex === virtualRow.index && activeCell.colIndex === idx
-                            : virtualRow.index === 0 && idx === 1;
-                          return (
-                            <td
-                              key={cell.id}
-                              role="gridcell"
-                              data-row-idx={virtualRow.index}
-                              data-col-idx={idx}
-                              tabIndex={isCellActive ? 0 : -1}
-                              onKeyDown={(e) => handleKeyDown(e, virtualRow.index, idx)}
-                              onFocus={() => setActiveCell({ rowIndex: virtualRow.index, colIndex: idx })}
-                              className={cn(
-                                "px-3 overflow-hidden focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1 focus:ring-offset-background",
-                                isSticky &&
-                                  cn("sticky z-10 shadow-[1px_0_0_0_hsl(var(--border))] transition-colors", leftOffset),
-                                isSticky && (
-                                  row.getIsSelected()
-                                    ? "bg-[#f0f7ff] dark:bg-[#131d2e] group-hover:bg-[#e0efff] dark:group-hover:bg-[#1a283e]"
-                                    : isSelfReported
-                                    ? "bg-[#fffbeb] dark:bg-[#1c1810] group-hover:bg-[#fef3c7] dark:group-hover:bg-[#261f12]"
-                                    : "bg-card group-hover:bg-muted/40"
-                                )
-                              )}
-                              style={{ height: ROW_HEIGHT }}
-                            >
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext()
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                  return (
+                    <tr
+                      key={row.id}
+                      role="row"
+                      aria-selected={row.getIsSelected()}
+                      data-index={virtualRow.index}
+                      data-state={row.getIsSelected() ? "selected" : undefined}
+                      className={cn(
+                        "group cursor-pointer border-b border-border/50 transition-colors hover:bg-muted/40",
+                        row.getIsSelected() && "bg-primary/5",
+                        isSelfReported && "bg-amber-50/40 dark:bg-amber-500/5"
+                      )}
+                      style={{ height: ROW_HEIGHT }}
+                      onClick={() => handleRowClick(row)}
+                    >
+                      {row.getVisibleCells().map((cell, idx) => {
+                        const isSticky = idx === 0 || idx === 1;
+                        const leftOffset = idx === 1 ? "left-[40px]" : "left-0";
+                        const isCellActive = activeCell
+                          ? activeCell.rowIndex === virtualRow.index && activeCell.colIndex === idx
+                          : virtualRow.index === 0 && idx === 1;
+                        return (
+                          <td
+                            key={cell.id}
+                            role="gridcell"
+                            data-row-idx={virtualRow.index}
+                            data-col-idx={idx}
+                            tabIndex={isCellActive ? 0 : -1}
+                            onKeyDown={(e) => handleKeyDown(e, virtualRow.index, idx)}
+                            onFocus={() => setActiveCell({ rowIndex: virtualRow.index, colIndex: idx })}
+                            className={cn(
+                              "px-3 overflow-hidden focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1 focus:ring-offset-background",
+                              isSticky &&
+                                cn("sticky z-10 shadow-[1px_0_0_0_hsl(var(--border))] transition-colors", leftOffset),
+                              isSticky && (
+                                row.getIsSelected()
+                                  ? "bg-[#f0f7ff] dark:bg-[#131d2e] group-hover:bg-[#e0efff] dark:group-hover:bg-[#1a283e]"
+                                  : isSelfReported
+                                  ? "bg-[#fffbeb] dark:bg-[#1c1810] group-hover:bg-[#fef3c7] dark:group-hover:bg-[#261f12]"
+                                  : "bg-card group-hover:bg-muted/40"
+                              )
+                            )}
+                            style={{ height: ROW_HEIGHT }}
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+                {virtualItems.length > 0 && (totalHeight - virtualItems[virtualItems.length - 1].end) > 0 && (
+                  <tr style={{ height: totalHeight - virtualItems[virtualItems.length - 1].end }}>
+                    <td colSpan={columns.length} style={{ padding: 0, border: 0 }} />
+                  </tr>
+                )}
+              </tbody>
+            </table>
 
             {/* Scroll position indicator */}
             <ScrollPositionBar
