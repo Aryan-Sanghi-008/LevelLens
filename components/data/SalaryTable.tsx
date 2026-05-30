@@ -527,6 +527,7 @@ export function SalaryTable({
       setPageSize(nextState.pageSize);
     },
     manualPagination: false,
+    autoResetPageIndex: false,
   });
 
   const { rows } = table.getRowModel();
